@@ -1,0 +1,16 @@
+# Android Git Ignore
+*.jks
+*.pem
+keystore.properties
+adi-registration.properties
+
+# Build artifacts
+build/
+.gradle/
+local.properties
+capture.png
+
+# IDE
+.idea/
+*.iml
+.vscode/

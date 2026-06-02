@@ -1,0 +1,507 @@
+{
+    "version": "1.0-OFFICIAL",
+    "last_updated": "2026-04-30",
+    "notes": "Eskom rates are official 2026/27. Municipal rates are official 2025/26. All rates EXCLUDE VAT.",
+    "providers": [
+        {
+            "id": "buffalo_city_standard",
+            "name": "Buffalo City - Residential Standard",
+            "type": "municipality",
+            "color": "#005931",
+            "periods": [
+                {
+                    "valid_from": "2025-07-01",
+                    "valid_to": "2026-06-30",
+                    "fixed_monthly_charge_cents": 0,
+                    "blocks": [
+                        {
+                            "min_kwh": 0,
+                            "max_kwh": 600,
+                            "rate_per_kwh_cents": 332.15
+                        },
+                        {
+                            "min_kwh": 601,
+                            "max_kwh": 999999,
+                            "rate_per_kwh_cents": 398.5
+                        }
+                    ]
+                }
+            ]
+        },
+        {
+            "id": "buffalo_city_indigent",
+            "name": "Buffalo City - Indigent",
+            "type": "municipality",
+            "color": "#005931",
+            "periods": [
+                {
+                    "valid_from": "2025-07-01",
+                    "valid_to": "2026-06-30",
+                    "fixed_monthly_charge_cents": 0,
+                    "blocks": [
+                        {
+                            "min_kwh": 0,
+                            "max_kwh": 100,
+                            "rate_per_kwh_cents": 0.00
+                        },
+                        {
+                            "min_kwh": 101,
+                            "max_kwh": 300,
+                            "rate_per_kwh_cents": 260.00
+                        },
+                        {
+                            "min_kwh": 301,
+                            "max_kwh": 999999,
+                            "rate_per_kwh_cents": 300.00
+                        }
+                    ]
+                }
+            ]
+        },
+        {
+            "id": "cape_town_home_user",
+            "name": "City of Cape Town - Home User",
+            "type": "municipality",
+            "color": "#009FDF",
+            "periods": [
+                {
+                    "valid_from": "2025-07-01",
+                    "valid_to": "2026-06-30",
+                    "fixed_monthly_charge_cents": 33989,
+                    "blocks": [
+                        {
+                            "min_kwh": 0,
+                            "max_kwh": 600,
+                            "rate_per_kwh_cents": 294.00
+                        },
+                        {
+                            "min_kwh": 601,
+                            "max_kwh": 999999,
+                            "rate_per_kwh_cents": 384.00
+                        }
+                    ]
+                }
+            ]
+        },
+        {
+            "id": "cape_town_lifeline",
+            "name": "City of Cape Town - Lifeline",
+            "type": "municipality",
+            "color": "#009FDF",
+            "periods": [
+                {
+                    "valid_from": "2025-07-01",
+                    "valid_to": "2026-06-30",
+                    "fixed_monthly_charge_cents": 0,
+                    "blocks": [
+                        {
+                            "min_kwh": 0,
+                            "max_kwh": 600,
+                            "rate_per_kwh_cents": 226.96
+                        }
+                    ]
+                }
+            ]
+        },
+        {
+            "id": "ekurhuleni_tariff_a",
+            "name": "City of Ekurhuleni - Tariff A (Low)",
+            "type": "municipality",
+            "color": "#0054A4",
+            "periods": [
+                {
+                    "valid_from": "2025-07-01",
+                    "valid_to": "2026-06-30",
+                    "fixed_monthly_charge_cents": 10978,
+                    "blocks": [
+                        {
+                            "min_kwh": 0,
+                            "max_kwh": 50,
+                            "rate_per_kwh_cents": 282.87
+                        },
+                        {
+                            "min_kwh": 51,
+                            "max_kwh": 600,
+                            "rate_per_kwh_cents": 282.87
+                        },
+                        {
+                            "min_kwh": 601,
+                            "max_kwh": 700,
+                            "rate_per_kwh_cents": 403.41
+                        },
+                        {
+                            "min_kwh": 701,
+                            "max_kwh": 999999,
+                            "rate_per_kwh_cents": 1143.98
+                        }
+                    ]
+                }
+            ]
+        },
+        {
+            "id": "ekurhuleni_tariff_b",
+            "name": "City of Ekurhuleni - Tariff B (High)",
+            "type": "municipality",
+            "color": "#0054A4",
+            "periods": [
+                {
+                    "valid_from": "2025-07-01",
+                    "valid_to": "2026-06-30",
+                    "fixed_monthly_charge_cents": 10978,
+                    "blocks": [
+                        {
+                            "min_kwh": 0,
+                            "max_kwh": 999999,
+                            "rate_per_kwh_cents": 348.43
+                        }
+                    ]
+                }
+            ]
+        },
+        {
+            "id": "eskom_homelight_20a",
+            "name": "Eskom HomeLight 20A (Low Consumption)",
+            "type": "eskom",
+            "color": "#005FB8",
+            "periods": [
+                {
+                    "valid_from": "2026-04-01",
+                    "valid_to": "2027-03-31",
+                    "fixed_monthly_charge_cents": 0,
+                    "blocks": [
+                        {
+                            "min_kwh": 0,
+                            "max_kwh": 350,
+                            "rate_per_kwh_cents": 208.63
+                        },
+                        {
+                            "min_kwh": 351,
+                            "max_kwh": 999999,
+                            "rate_per_kwh_cents": 235.34
+                        }
+                    ]
+                }
+            ]
+        },
+        {
+            "id": "eskom_homelight_60a",
+            "name": "Eskom HomeLight 60A (High Consumption)",
+            "type": "eskom",
+            "color": "#005FB8",
+            "periods": [
+                {
+                    "valid_from": "2026-04-01",
+                    "valid_to": "2027-03-31",
+                    "fixed_monthly_charge_cents": 0,
+                    "blocks": [
+                        {
+                            "min_kwh": 0,
+                            "max_kwh": 600,
+                            "rate_per_kwh_cents": 234.33
+                        },
+                        {
+                            "min_kwh": 601,
+                            "max_kwh": 999999,
+                            "rate_per_kwh_cents": 258.91
+                        }
+                    ]
+                }
+            ]
+        },
+        {
+            "id": "ethekwini_residential",
+            "name": "eThekwini (Durban) - Residential Standard",
+            "type": "municipality",
+            "color": "#004F31",
+            "periods": [
+                {
+                    "valid_from": "2025-07-01",
+                    "valid_to": "2026-06-30",
+                    "fixed_monthly_charge_cents": 0,
+                    "blocks": [
+                        {
+                            "min_kwh": 0,
+                            "max_kwh": 999999,
+                            "rate_per_kwh_cents": 327.95
+                        }
+                    ]
+                }
+            ]
+        },
+        {
+            "id": "ethekwini_indigent",
+            "name": "eThekwini (Durban) - Indigent/Lifeline",
+            "type": "municipality",
+            "color": "#004F31",
+            "periods": [
+                {
+                    "valid_from": "2025-07-01",
+                    "valid_to": "2026-06-30",
+                    "fixed_monthly_charge_cents": 0,
+                    "blocks": [
+                        {
+                            "min_kwh": 0,
+                            "max_kwh": 65,
+                            "rate_per_kwh_cents": 0.00
+                        },
+                        {
+                            "min_kwh": 66,
+                            "max_kwh": 999999,
+                            "rate_per_kwh_cents": 213.11
+                        }
+                    ]
+                }
+            ]
+        },
+        {
+            "id": "joburg_city_power_low",
+            "name": "City Power (Joburg) - Prepaid Low (Indigent)",
+            "type": "municipality",
+            "color": "#FFD700",
+            "periods": [
+                {
+                    "valid_from": "2025-07-01",
+                    "valid_to": "2026-06-30",
+                    "fixed_monthly_charge_cents": 0,
+                    "blocks": [
+                        {
+                            "min_kwh": 0,
+                            "max_kwh": 350,
+                            "rate_per_kwh_cents": 236.34
+                        },
+                        {
+                            "min_kwh": 351,
+                            "max_kwh": 500,
+                            "rate_per_kwh_cents": 271.10
+                        },
+                        {
+                            "min_kwh": 501,
+                            "max_kwh": 999999,
+                            "rate_per_kwh_cents": 308.91
+                        }
+                    ]
+                }
+            ]
+        },
+        {
+            "id": "joburg_city_power_high",
+            "name": "City Power (Joburg) - Prepaid High",
+            "type": "municipality",
+            "color": "#FFD700",
+            "periods": [
+                {
+                    "valid_from": "2025-07-01",
+                    "valid_to": "2026-06-30",
+                    "fixed_monthly_charge_cents": 20000,
+                    "blocks": [
+                        {
+                            "min_kwh": 0,
+                            "max_kwh": 350,
+                            "rate_per_kwh_cents": 266.45
+                        },
+                        {
+                            "min_kwh": 351,
+                            "max_kwh": 500,
+                            "rate_per_kwh_cents": 305.64
+                        },
+                        {
+                            "min_kwh": 501,
+                            "max_kwh": 999999,
+                            "rate_per_kwh_cents": 348.26
+                        }
+                    ]
+                }
+            ]
+        },
+        {
+            "id": "mangaung_residential",
+            "name": "Mangaung (Centlec) - Residential Prepaid",
+            "type": "municipality",
+            "color": "#DA291C",
+            "periods": [
+                {
+                    "valid_from": "2025-07-01",
+                    "valid_to": "2026-06-30",
+                    "fixed_monthly_charge_cents": 0,
+                    "blocks": [
+                        {
+                            "min_kwh": 0,
+                            "max_kwh": 350,
+                            "rate_per_kwh_cents": 277.00
+                        },
+                        {
+                            "min_kwh": 351,
+                            "max_kwh": 999999,
+                            "rate_per_kwh_cents": 319.00
+                        }
+                    ]
+                }
+            ]
+        },
+        {
+            "id": "mangaung_indigent",
+            "name": "Mangaung (Centlec) - Indigent",
+            "type": "municisality",
+            "color": "#DA291C",
+            "periods": [
+                {
+                    "valid_from": "2025-07-01",
+                    "valid_to": "2026-06-30",
+                    "fixed_monthly_charge_cents": 0,
+                    "blocks": [
+                        {
+                            "min_kwh": 0,
+                            "max_kwh": 50,
+                            "rate_per_kwh_cents": 216.00
+                        },
+                        {
+                            "min_kwh": 51,
+                            "max_kwh": 350,
+                            "rate_per_kwh_cents": 230.00
+                        },
+                        {
+                            "min_kwh": 351,
+                            "max_kwh": 999999,
+                            "rate_per_kwh_cents": 313.00
+                        }
+                    ]
+                }
+            ]
+        },
+        {
+            "id": "nelson_mandela_bay_standard",
+            "name": "Nelson Mandela Bay - Domestic Standard",
+            "type": "municipality",
+            "color": "#004B87",
+            "periods": [
+                {
+                    "valid_from": "2025-07-01",
+                    "valid_to": "2026-06-30",
+                    "fixed_monthly_charge_cents": 0,
+                    "blocks": [
+                        {
+                            "min_kwh": 0,
+                            "max_kwh": 250,
+                            "rate_per_kwh_cents": 302.78
+                        },
+                        {
+                            "min_kwh": 251,
+                            "max_kwh": 500,
+                            "rate_per_kwh_cents": 359.00
+                        },
+                        {
+                            "min_kwh": 501,
+                            "max_kwh": 999999,
+                            "rate_per_kwh_cents": 397.67
+                        }
+                    ]
+                }
+            ]
+        },
+        {
+            "id": "nelson_mandela_bay_attp",
+            "name": "Nelson Mandela Bay - Domestic ATTP",
+            "type": "municipality",
+            "color": "#004B87",
+            "periods": [
+                {
+                    "valid_from": "2025-07-01",
+                    "valid_to": "2026-06-30",
+                    "fixed_monthly_charge_cents": 0,
+                    "blocks": [
+                        {
+                            "min_kwh": 0,
+                            "max_kwh": 75,
+                            "rate_per_kwh_cents": 193.10
+                        },
+                        {
+                            "min_kwh": 76,
+                            "max_kwh": 300,
+                            "rate_per_kwh_cents": 211.99
+                        },
+                        {
+                            "min_kwh": 301,
+                            "max_kwh": 500,
+                            "rate_per_kwh_cents": 352.18
+                        },
+                        {
+                            "min_kwh": 501,
+                            "max_kwh": 999999,
+                            "rate_per_kwh_cents": 397.21
+                        }
+                    ]
+                }
+            ]
+        },
+        {
+            "id": "tshwane_prepaid",
+            "name": "City of Tshwane - Residential Prepaid",
+            "type": "municipality",
+            "color": "#008751",
+            "periods": [
+                {
+                    "valid_from": "2025-07-01",
+                    "valid_to": "2026-06-30",
+                    "fixed_monthly_charge_cents": 0,
+                    "blocks": [
+                        {
+                            "min_kwh": 0,
+                            "max_kwh": 100,
+                            "rate_per_kwh_cents": 297.90
+                        },
+                        {
+                            "min_kwh": 101,
+                            "max_kwh": 400,
+                            "rate_per_kwh_cents": 348.64
+                        },
+                        {
+                            "min_kwh": 401,
+                            "max_kwh": 650,
+                            "rate_per_kwh_cents": 379.84
+                        },
+                        {
+                            "min_kwh": 651,
+                            "max_kwh": 999999,
+                            "rate_per_kwh_cents": 409.48
+                        }
+                    ]
+                }
+            ]
+        },
+        {
+            "id": "tshwane_indigent",
+            "name": "City of Tshwane - Indigent/Lifeline",
+            "type": "municipality",
+            "color": "#008751",
+            "periods": [
+                {
+                    "valid_from": "2025-07-01",
+                    "valid_to": "2026-06-30",
+                    "fixed_monthly_charge_cents": 0,
+                    "blocks": [
+                        {
+                            "min_kwh": 0,
+                            "max_kwh": 100,
+                            "rate_per_kwh_cents": 297.22
+                        },
+                        {
+                            "min_kwh": 101,
+                            "max_kwh": 400,
+                            "rate_per_kwh_cents": 341.91
+                        },
+                        {
+                            "min_kwh": 401,
+                            "max_kwh": 650,
+                            "rate_per_kwh_cents": 375.12
+                        },
+                        {
+                            "min_kwh": 651,
+                            "max_kwh": 999999,
+                            "rate_per_kwh_cents": 400.26
+                        }
+                    ]
+                }
+            ]
+        }
+    ]
+}
