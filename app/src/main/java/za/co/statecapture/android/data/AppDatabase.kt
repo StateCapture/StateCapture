@@ -9,7 +9,7 @@ import androidx.sqlite.db.SupportSQLiteDatabase
 
 import androidx.room.TypeConverters
 
-@Database(entities = [Meter::class, Purchase::class, TariffProviderEntity::class], version = 7, exportSchema = false)
+@Database(entities = [Meter::class, Purchase::class, TariffProviderEntity::class, TariffIndexEntity::class], version = 8, exportSchema = false)
 @TypeConverters(TariffConverters::class)
 abstract class AppDatabase : RoomDatabase() {
 
@@ -39,6 +39,13 @@ abstract class AppDatabase : RoomDatabase() {
             }
         }
 
+        private val MIGRATION_7_8 = object : Migration(7, 8) {
+            override fun migrate(db: SupportSQLiteDatabase) {
+                db.execSQL("ALTER TABLE tariff_providers ADD COLUMN officialUrl TEXT")
+                db.execSQL("CREATE TABLE IF NOT EXISTS tariff_index (id TEXT NOT NULL, name TEXT NOT NULL, type TEXT NOT NULL, color TEXT, providerId TEXT NOT NULL, files TEXT NOT NULL, PRIMARY KEY(id))")
+            }
+        }
+
         @Volatile
         private var INSTANCE: AppDatabase? = null
 
@@ -49,7 +56,7 @@ abstract class AppDatabase : RoomDatabase() {
                     AppDatabase::class.java,
                     "statecapture_database"
                 )
-                .addMigrations(MIGRATION_4_5, MIGRATION_5_6, MIGRATION_6_7)
+                .addMigrations(MIGRATION_4_5, MIGRATION_5_6, MIGRATION_6_7, MIGRATION_7_8)
                 .fallbackToDestructiveMigration()
                 .build()
                 INSTANCE = instance

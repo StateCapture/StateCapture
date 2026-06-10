@@ -43,4 +43,6 @@ object AppConstants {
     const val ADMOB_APP_ID = "ca-app-pub-5657991828045333~7891259037"
     const val ADMOB_BANNER_UNIT_ID = "ca-app-pub-5657991828045333/5594828795" // Unit: Bottom Banner
     const val ADMOB_NATIVE_UNIT_ID = "ca-app-pub-5657991828045333/7279061111" // Unit: Support
+
+    const val TARIFF_BASE_URL = "https://raw.githubusercontent.com/StateCapture/StateCapture/main/tariffs/"
 }

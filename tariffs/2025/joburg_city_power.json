@@ -1,0 +1,67 @@
+{
+    "id": "joburg_city_power",
+    "name": "City Power Joburg",
+    "official_url": "https://www.citypower.co.za",
+    "tariffs": [
+        {
+            "id": "joburg_city_power_low",
+            "name": "City Power (Joburg) - Prepaid Low (Indigent)",
+            "type": "municipality",
+            "color": "#FFD700",
+            "periods": [
+                {
+                    "valid_from": "2025-07-01",
+                    "valid_to": "2026-06-30",
+                    "fixed_monthly_charge_cents": 0,
+                    "blocks": [
+                        {
+                            "min_kwh": 0,
+                            "max_kwh": 350,
+                            "rate_per_kwh_cents": 236.34
+                        },
+                        {
+                            "min_kwh": 351,
+                            "max_kwh": 500,
+                            "rate_per_kwh_cents": 271.1
+                        },
+                        {
+                            "min_kwh": 501,
+                            "max_kwh": 999999,
+                            "rate_per_kwh_cents": 308.91
+                        }
+                    ]
+                }
+            ]
+        },
+        {
+            "id": "joburg_city_power_high",
+            "name": "City Power (Joburg) - Prepaid High",
+            "type": "municipality",
+            "color": "#FFD700",
+            "periods": [
+                {
+                    "valid_from": "2025-07-01",
+                    "valid_to": "2026-06-30",
+                    "fixed_monthly_charge_cents": 20000,
+                    "blocks": [
+                        {
+                            "min_kwh": 0,
+                            "max_kwh": 350,
+                            "rate_per_kwh_cents": 266.45
+                        },
+                        {
+                            "min_kwh": 351,
+                            "max_kwh": 500,
+                            "rate_per_kwh_cents": 305.64
+                        },
+                        {
+                            "min_kwh": 501,
+                            "max_kwh": 999999,
+                            "rate_per_kwh_cents": 348.26
+                        }
+                    ]
+                }
+            ]
+        }
+    ]
+}

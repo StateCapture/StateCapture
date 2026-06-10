@@ -1,0 +1,57 @@
+{
+    "id": "eskom",
+    "name": "Eskom",
+    "official_url": "https://www.eskom.co.za",
+    "tariffs": [
+        {
+            "id": "eskom_homelight_20a",
+            "name": "Eskom HomeLight 20A (Low Consumption)",
+            "type": "eskom",
+            "color": "#005FB8",
+            "periods": [
+                {
+                    "valid_from": "2026-04-01",
+                    "valid_to": "2027-03-31",
+                    "fixed_monthly_charge_cents": 0,
+                    "blocks": [
+                        {
+                            "min_kwh": 0,
+                            "max_kwh": 350,
+                            "rate_per_kwh_cents": 208.63
+                        },
+                        {
+                            "min_kwh": 351,
+                            "max_kwh": 999999,
+                            "rate_per_kwh_cents": 235.34
+                        }
+                    ]
+                }
+            ]
+        },
+        {
+            "id": "eskom_homelight_60a",
+            "name": "Eskom HomeLight 60A (High Consumption)",
+            "type": "eskom",
+            "color": "#005FB8",
+            "periods": [
+                {
+                    "valid_from": "2026-04-01",
+                    "valid_to": "2027-03-31",
+                    "fixed_monthly_charge_cents": 0,
+                    "blocks": [
+                        {
+                            "min_kwh": 0,
+                            "max_kwh": 600,
+                            "rate_per_kwh_cents": 234.33
+                        },
+                        {
+                            "min_kwh": 601,
+                            "max_kwh": 999999,
+                            "rate_per_kwh_cents": 258.91
+                        }
+                    ]
+                }
+            ]
+        }
+    ]
+}

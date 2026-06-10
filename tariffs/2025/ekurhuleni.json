@@ -1,0 +1,62 @@
+{
+    "id": "ekurhuleni",
+    "name": "City of Ekurhuleni",
+    "official_url": "https://www.ekurhuleni.gov.za",
+    "tariffs": [
+        {
+            "id": "ekurhuleni_tariff_a",
+            "name": "City of Ekurhuleni - Tariff A (Low)",
+            "type": "municipality",
+            "color": "#0054A4",
+            "periods": [
+                {
+                    "valid_from": "2025-07-01",
+                    "valid_to": "2026-06-30",
+                    "fixed_monthly_charge_cents": 10978,
+                    "blocks": [
+                        {
+                            "min_kwh": 0,
+                            "max_kwh": 50,
+                            "rate_per_kwh_cents": 282.87
+                        },
+                        {
+                            "min_kwh": 51,
+                            "max_kwh": 600,
+                            "rate_per_kwh_cents": 282.87
+                        },
+                        {
+                            "min_kwh": 601,
+                            "max_kwh": 700,
+                            "rate_per_kwh_cents": 403.41
+                        },
+                        {
+                            "min_kwh": 701,
+                            "max_kwh": 999999,
+                            "rate_per_kwh_cents": 1143.98
+                        }
+                    ]
+                }
+            ]
+        },
+        {
+            "id": "ekurhuleni_tariff_b",
+            "name": "City of Ekurhuleni - Tariff B (High)",
+            "type": "municipality",
+            "color": "#0054A4",
+            "periods": [
+                {
+                    "valid_from": "2025-07-01",
+                    "valid_to": "2026-06-30",
+                    "fixed_monthly_charge_cents": 10978,
+                    "blocks": [
+                        {
+                            "min_kwh": 0,
+                            "max_kwh": 999999,
+                            "rate_per_kwh_cents": 348.43
+                        }
+                    ]
+                }
+            ]
+        }
+    ]
+}

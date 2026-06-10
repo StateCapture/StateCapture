@@ -1,0 +1,62 @@
+{
+    "id": "mangaung",
+    "name": "Centlec (Mangaung)",
+    "official_url": "https://www.centlec.co.za",
+    "tariffs": [
+        {
+            "id": "mangaung_residential",
+            "name": "Mangaung (Centlec) - Residential Prepaid",
+            "type": "municipality",
+            "color": "#DA291C",
+            "periods": [
+                {
+                    "valid_from": "2025-07-01",
+                    "valid_to": "2026-06-30",
+                    "fixed_monthly_charge_cents": 0,
+                    "blocks": [
+                        {
+                            "min_kwh": 0,
+                            "max_kwh": 350,
+                            "rate_per_kwh_cents": 277.0
+                        },
+                        {
+                            "min_kwh": 351,
+                            "max_kwh": 999999,
+                            "rate_per_kwh_cents": 319.0
+                        }
+                    ]
+                }
+            ]
+        },
+        {
+            "id": "mangaung_indigent",
+            "name": "Mangaung (Centlec) - Indigent",
+            "type": "municisality",
+            "color": "#DA291C",
+            "periods": [
+                {
+                    "valid_from": "2025-07-01",
+                    "valid_to": "2026-06-30",
+                    "fixed_monthly_charge_cents": 0,
+                    "blocks": [
+                        {
+                            "min_kwh": 0,
+                            "max_kwh": 50,
+                            "rate_per_kwh_cents": 216.0
+                        },
+                        {
+                            "min_kwh": 51,
+                            "max_kwh": 350,
+                            "rate_per_kwh_cents": 230.0
+                        },
+                        {
+                            "min_kwh": 351,
+                            "max_kwh": 999999,
+                            "rate_per_kwh_cents": 313.0
+                        }
+                    ]
+                }
+            ]
+        }
+    ]
+}

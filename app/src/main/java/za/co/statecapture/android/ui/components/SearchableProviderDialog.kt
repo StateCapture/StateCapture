@@ -14,14 +14,14 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
-import za.co.statecapture.android.domain.model.TariffProvider
+import za.co.statecapture.android.domain.model.TariffIndexItem
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SearchableProviderDialog(
-    providers: List<TariffProvider>,
+    providers: List<TariffIndexItem>,
     onDismiss: () -> Unit,
-    onSelect: (TariffProvider) -> Unit
+    onSelect: (TariffIndexItem) -> Unit
 ) {
     var searchQuery by remember { mutableStateOf("") }
     val filteredProviders = remember(searchQuery, providers) {
@@ -73,7 +73,7 @@ fun SearchableProviderDialog(
 
 @Composable
 fun ProviderListItem(
-    provider: TariffProvider,
+    provider: TariffIndexItem,
     onClick: () -> Unit
 ) {
     val defaultColor = MaterialTheme.colorScheme.primary

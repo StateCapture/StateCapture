@@ -1,0 +1,77 @@
+{
+    "id": "tshwane",
+    "name": "City of Tshwane",
+    "official_url": "https://www.tshwane.gov.za",
+    "tariffs": [
+        {
+            "id": "tshwane_prepaid",
+            "name": "City of Tshwane - Residential Prepaid",
+            "type": "municipality",
+            "color": "#008751",
+            "periods": [
+                {
+                    "valid_from": "2025-07-01",
+                    "valid_to": "2026-06-30",
+                    "fixed_monthly_charge_cents": 0,
+                    "blocks": [
+                        {
+                            "min_kwh": 0,
+                            "max_kwh": 100,
+                            "rate_per_kwh_cents": 297.9
+                        },
+                        {
+                            "min_kwh": 101,
+                            "max_kwh": 400,
+                            "rate_per_kwh_cents": 348.64
+                        },
+                        {
+                            "min_kwh": 401,
+                            "max_kwh": 650,
+                            "rate_per_kwh_cents": 379.84
+                        },
+                        {
+                            "min_kwh": 651,
+                            "max_kwh": 999999,
+                            "rate_per_kwh_cents": 409.48
+                        }
+                    ]
+                }
+            ]
+        },
+        {
+            "id": "tshwane_indigent",
+            "name": "City of Tshwane - Indigent/Lifeline",
+            "type": "municipality",
+            "color": "#008751",
+            "periods": [
+                {
+                    "valid_from": "2025-07-01",
+                    "valid_to": "2026-06-30",
+                    "fixed_monthly_charge_cents": 0,
+                    "blocks": [
+                        {
+                            "min_kwh": 0,
+                            "max_kwh": 100,
+                            "rate_per_kwh_cents": 0.0
+                        },
+                        {
+                            "min_kwh": 101,
+                            "max_kwh": 400,
+                            "rate_per_kwh_cents": 348.64
+                        },
+                        {
+                            "min_kwh": 401,
+                            "max_kwh": 650,
+                            "rate_per_kwh_cents": 379.84
+                        },
+                        {
+                            "min_kwh": 651,
+                            "max_kwh": 999999,
+                            "rate_per_kwh_cents": 409.48
+                        }
+                    ]
+                }
+            ]
+        }
+    ]
+}

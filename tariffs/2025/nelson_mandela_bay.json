@@ -1,0 +1,72 @@
+{
+    "id": "nelson_mandela_bay",
+    "name": "Nelson Mandela Bay Municipality",
+    "official_url": "https://www.nelsonmandelabay.gov.za",
+    "tariffs": [
+        {
+            "id": "nelson_mandela_bay_standard",
+            "name": "Nelson Mandela Bay - Domestic Standard",
+            "type": "municipality",
+            "color": "#004B87",
+            "periods": [
+                {
+                    "valid_from": "2025-07-01",
+                    "valid_to": "2026-06-30",
+                    "fixed_monthly_charge_cents": 0,
+                    "blocks": [
+                        {
+                            "min_kwh": 0,
+                            "max_kwh": 250,
+                            "rate_per_kwh_cents": 302.78
+                        },
+                        {
+                            "min_kwh": 251,
+                            "max_kwh": 500,
+                            "rate_per_kwh_cents": 359.0
+                        },
+                        {
+                            "min_kwh": 501,
+                            "max_kwh": 999999,
+                            "rate_per_kwh_cents": 397.67
+                        }
+                    ]
+                }
+            ]
+        },
+        {
+            "id": "nelson_mandela_bay_attp",
+            "name": "Nelson Mandela Bay - Domestic ATTP",
+            "type": "municipality",
+            "color": "#004B87",
+            "periods": [
+                {
+                    "valid_from": "2025-07-01",
+                    "valid_to": "2026-06-30",
+                    "fixed_monthly_charge_cents": 0,
+                    "blocks": [
+                        {
+                            "min_kwh": 0,
+                            "max_kwh": 75,
+                            "rate_per_kwh_cents": 193.1
+                        },
+                        {
+                            "min_kwh": 76,
+                            "max_kwh": 300,
+                            "rate_per_kwh_cents": 211.99
+                        },
+                        {
+                            "min_kwh": 301,
+                            "max_kwh": 500,
+                            "rate_per_kwh_cents": 352.18
+                        },
+                        {
+                            "min_kwh": 501,
+                            "max_kwh": 999999,
+                            "rate_per_kwh_cents": 397.21
+                        }
+                    ]
+                }
+            ]
+        }
+    ]
+}

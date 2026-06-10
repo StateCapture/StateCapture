@@ -2,14 +2,14 @@ package za.co.statecapture.android.data
 
 import androidx.room.Entity
 import androidx.room.PrimaryKey
-import za.co.statecapture.android.domain.model.TariffPeriod
+import za.co.statecapture.android.domain.model.TariffIndexFileItem
 
-@Entity(tableName = "tariff_providers")
-data class TariffProviderEntity(
+@Entity(tableName = "tariff_index")
+data class TariffIndexEntity(
     @PrimaryKey val id: String,
     val name: String,
     val type: String,
     val color: String?,
-    val officialUrl: String?,
-    val periods: List<TariffPeriod>
+    val providerId: String,
+    val files: List<TariffIndexFileItem>
 )

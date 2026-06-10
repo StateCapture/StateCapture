@@ -1,0 +1,62 @@
+{
+    "id": "buffalo_city",
+    "name": "Buffalo City Municipality",
+    "official_url": "https://www.buffalocity.gov.za",
+    "tariffs": [
+        {
+            "id": "buffalo_city_standard",
+            "name": "Buffalo City - Residential Standard",
+            "type": "municipality",
+            "color": "#005931",
+            "periods": [
+                {
+                    "valid_from": "2025-07-01",
+                    "valid_to": "2026-06-30",
+                    "fixed_monthly_charge_cents": 0,
+                    "blocks": [
+                        {
+                            "min_kwh": 0,
+                            "max_kwh": 600,
+                            "rate_per_kwh_cents": 332.15
+                        },
+                        {
+                            "min_kwh": 601,
+                            "max_kwh": 999999,
+                            "rate_per_kwh_cents": 398.5
+                        }
+                    ]
+                }
+            ]
+        },
+        {
+            "id": "buffalo_city_indigent",
+            "name": "Buffalo City - Indigent",
+            "type": "municipality",
+            "color": "#005931",
+            "periods": [
+                {
+                    "valid_from": "2025-07-01",
+                    "valid_to": "2026-06-30",
+                    "fixed_monthly_charge_cents": 0,
+                    "blocks": [
+                        {
+                            "min_kwh": 0,
+                            "max_kwh": 100,
+                            "rate_per_kwh_cents": 0.0
+                        },
+                        {
+                            "min_kwh": 101,
+                            "max_kwh": 300,
+                            "rate_per_kwh_cents": 260.0
+                        },
+                        {
+                            "min_kwh": 301,
+                            "max_kwh": 999999,
+                            "rate_per_kwh_cents": 300.0
+                        }
+                    ]
+                }
+            ]
+        }
+    ]
+}

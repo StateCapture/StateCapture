@@ -64,16 +64,16 @@ fun QuickCalculatorContent(
                     modifier = Modifier.fillMaxWidth()
                 ) {
                     val defaultColor = MaterialTheme.colorScheme.primary
-                    val color = remember(uiState.selectedProvider, defaultColor) {
+                    val color = remember(uiState.selectedIndexItem, defaultColor) {
                         try {
-                            val hex = uiState.selectedProvider?.color
+                            val hex = uiState.selectedIndexItem?.color
                             if (hex != null) Color(AndroidColor.parseColor(hex)) else defaultColor
                         } catch (e: Exception) { defaultColor }
                     }
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         Box(modifier = Modifier.size(8.dp).background(color, CircleShape))
                         Spacer(modifier = Modifier.width(8.dp))
-                        Text(uiState.selectedProvider?.name ?: "Select a provider")
+                        Text(uiState.selectedIndexItem?.name ?: "Select a provider")
                     }
                 }
                 if (showProviderDialog) {

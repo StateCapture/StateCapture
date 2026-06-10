@@ -1,0 +1,257 @@
+{
+    "last_updated": "2026-06-10",
+    "plans": [
+        {
+            "id": "cape_town_home_user",
+            "name": "City of Cape Town - Home User",
+            "type": "municipality",
+            "color": "#009FDF",
+            "provider_id": "cape_town",
+            "files": [
+                {
+                    "valid_from": "2025-07-01",
+                    "valid_to": "2026-06-30",
+                    "path": "2025/cape_town.json"
+                }
+            ]
+        },
+        {
+            "id": "cape_town_lifeline",
+            "name": "City of Cape Town - Lifeline",
+            "type": "municipality",
+            "color": "#009FDF",
+            "provider_id": "cape_town",
+            "files": [
+                {
+                    "valid_from": "2025-07-01",
+                    "valid_to": "2026-06-30",
+                    "path": "2025/cape_town.json"
+                }
+            ]
+        },
+        {
+            "id": "joburg_city_power_low",
+            "name": "City Power (Joburg) - Prepaid Low (Indigent)",
+            "type": "municipality",
+            "color": "#FFD700",
+            "provider_id": "joburg_city_power",
+            "files": [
+                {
+                    "valid_from": "2025-07-01",
+                    "valid_to": "2026-06-30",
+                    "path": "2025/joburg_city_power.json"
+                }
+            ]
+        },
+        {
+            "id": "joburg_city_power_high",
+            "name": "City Power (Joburg) - Prepaid High",
+            "type": "municipality",
+            "color": "#FFD700",
+            "provider_id": "joburg_city_power",
+            "files": [
+                {
+                    "valid_from": "2025-07-01",
+                    "valid_to": "2026-06-30",
+                    "path": "2025/joburg_city_power.json"
+                }
+            ]
+        },
+        {
+            "id": "nelson_mandela_bay_standard",
+            "name": "Nelson Mandela Bay - Domestic Standard",
+            "type": "municipality",
+            "color": "#004B87",
+            "provider_id": "nelson_mandela_bay",
+            "files": [
+                {
+                    "valid_from": "2025-07-01",
+                    "valid_to": "2026-06-30",
+                    "path": "2025/nelson_mandela_bay.json"
+                }
+            ]
+        },
+        {
+            "id": "nelson_mandela_bay_attp",
+            "name": "Nelson Mandela Bay - Domestic ATTP",
+            "type": "municipality",
+            "color": "#004B87",
+            "provider_id": "nelson_mandela_bay",
+            "files": [
+                {
+                    "valid_from": "2025-07-01",
+                    "valid_to": "2026-06-30",
+                    "path": "2025/nelson_mandela_bay.json"
+                }
+            ]
+        },
+        {
+            "id": "ethekwini_residential",
+            "name": "eThekwini (Durban) - Residential Standard",
+            "type": "municipality",
+            "color": "#004F31",
+            "provider_id": "ethekwini",
+            "files": [
+                {
+                    "valid_from": "2025-07-01",
+                    "valid_to": "2026-06-30",
+                    "path": "2025/ethekwini.json"
+                }
+            ]
+        },
+        {
+            "id": "ethekwini_indigent",
+            "name": "eThekwini (Durban) - Indigent/Lifeline",
+            "type": "municipality",
+            "color": "#004F31",
+            "provider_id": "ethekwini",
+            "files": [
+                {
+                    "valid_from": "2025-07-01",
+                    "valid_to": "2026-06-30",
+                    "path": "2025/ethekwini.json"
+                }
+            ]
+        },
+        {
+            "id": "mangaung_residential",
+            "name": "Mangaung (Centlec) - Residential Prepaid",
+            "type": "municipality",
+            "color": "#DA291C",
+            "provider_id": "mangaung",
+            "files": [
+                {
+                    "valid_from": "2025-07-01",
+                    "valid_to": "2026-06-30",
+                    "path": "2025/mangaung.json"
+                }
+            ]
+        },
+        {
+            "id": "mangaung_indigent",
+            "name": "Mangaung (Centlec) - Indigent",
+            "type": "municisality",
+            "color": "#DA291C",
+            "provider_id": "mangaung",
+            "files": [
+                {
+                    "valid_from": "2025-07-01",
+                    "valid_to": "2026-06-30",
+                    "path": "2025/mangaung.json"
+                }
+            ]
+        },
+        {
+            "id": "buffalo_city_standard",
+            "name": "Buffalo City - Residential Standard",
+            "type": "municipality",
+            "color": "#005931",
+            "provider_id": "buffalo_city",
+            "files": [
+                {
+                    "valid_from": "2025-07-01",
+                    "valid_to": "2026-06-30",
+                    "path": "2025/buffalo_city.json"
+                }
+            ]
+        },
+        {
+            "id": "buffalo_city_indigent",
+            "name": "Buffalo City - Indigent",
+            "type": "municipality",
+            "color": "#005931",
+            "provider_id": "buffalo_city",
+            "files": [
+                {
+                    "valid_from": "2025-07-01",
+                    "valid_to": "2026-06-30",
+                    "path": "2025/buffalo_city.json"
+                }
+            ]
+        },
+        {
+            "id": "ekurhuleni_tariff_a",
+            "name": "City of Ekurhuleni - Tariff A (Low)",
+            "type": "municipality",
+            "color": "#0054A4",
+            "provider_id": "ekurhuleni",
+            "files": [
+                {
+                    "valid_from": "2025-07-01",
+                    "valid_to": "2026-06-30",
+                    "path": "2025/ekurhuleni.json"
+                }
+            ]
+        },
+        {
+            "id": "ekurhuleni_tariff_b",
+            "name": "City of Ekurhuleni - Tariff B (High)",
+            "type": "municipality",
+            "color": "#0054A4",
+            "provider_id": "ekurhuleni",
+            "files": [
+                {
+                    "valid_from": "2025-07-01",
+                    "valid_to": "2026-06-30",
+                    "path": "2025/ekurhuleni.json"
+                }
+            ]
+        },
+        {
+            "id": "tshwane_prepaid",
+            "name": "City of Tshwane - Residential Prepaid",
+            "type": "municipality",
+            "color": "#008751",
+            "provider_id": "tshwane",
+            "files": [
+                {
+                    "valid_from": "2025-07-01",
+                    "valid_to": "2026-06-30",
+                    "path": "2025/tshwane.json"
+                }
+            ]
+        },
+        {
+            "id": "tshwane_indigent",
+            "name": "City of Tshwane - Indigent/Lifeline",
+            "type": "municipality",
+            "color": "#008751",
+            "provider_id": "tshwane",
+            "files": [
+                {
+                    "valid_from": "2025-07-01",
+                    "valid_to": "2026-06-30",
+                    "path": "2025/tshwane.json"
+                }
+            ]
+        },
+        {
+            "id": "eskom_homelight_20a",
+            "name": "Eskom HomeLight 20A (Low Consumption)",
+            "type": "eskom",
+            "color": "#005FB8",
+            "provider_id": "eskom",
+            "files": [
+                {
+                    "valid_from": "2026-04-01",
+                    "valid_to": "2027-03-31",
+                    "path": "2026/eskom.json"
+                }
+            ]
+        },
+        {
+            "id": "eskom_homelight_60a",
+            "name": "Eskom HomeLight 60A (High Consumption)",
+            "type": "eskom",
+            "color": "#005FB8",
+            "provider_id": "eskom",
+            "files": [
+                {
+                    "valid_from": "2026-04-01",
+                    "valid_to": "2027-03-31",
+                    "path": "2026/eskom.json"
+                }
+            ]
+        }
+    ]
+}
