@@ -189,7 +189,13 @@ fun TariffDetailCard(
     accentColor: Color
 ) {
     val context = LocalContext.current
-    val period = provider.periods.firstOrNull() ?: return
+    val date = java.time.LocalDate.now()
+    val period = provider.periods.find { p ->
+        val validFrom = java.time.LocalDate.parse(p.validFrom)
+        val validTo = p.validTo?.let { java.time.LocalDate.parse(it) }
+        (date.isEqual(validFrom) || date.isAfter(validFrom)) &&
+        (validTo == null || date.isEqual(validTo) || date.isBefore(validTo))
+    } ?: provider.periods.lastOrNull() ?: return
     
     Card(
         modifier = Modifier.fillMaxWidth(),
@@ -207,6 +213,10 @@ fun TariffDetailCard(
             )
             Text(
                 text = "Type: ${provider.type.replaceFirstChar { it.uppercase() }}",
+                style = MaterialTheme.typography.labelSmall
+            )
+            Text(
+                text = "Valid: ${period.validFrom} to ${period.validTo ?: "Current"}",
                 style = MaterialTheme.typography.labelSmall
             )
             
