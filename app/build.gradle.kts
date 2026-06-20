@@ -15,8 +15,8 @@ android {
         applicationId = "za.co.statecapture.android"
         minSdk = 24
         targetSdk = 35
-        versionCode = 3
-        versionName = "1.0.2"
+        versionCode = 4
+        versionName = "1.0.3"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         vectorDrawables {
@@ -97,6 +97,9 @@ dependencies {
     
     // WorkManager
     implementation("androidx.work:work-runtime-ktx:2.9.0")
+    
+    // Force newer fragment version to avoid Play Console warning
+    implementation("androidx.fragment:fragment-ktx:1.8.0")
     
     // Ads
     implementation("com.google.android.gms:play-services-ads:23.0.0")
