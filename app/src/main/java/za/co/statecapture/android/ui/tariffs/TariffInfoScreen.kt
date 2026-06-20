@@ -8,6 +8,7 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.verticalScroll
@@ -21,6 +22,9 @@ import za.co.statecapture.android.domain.model.TariffProvider
 import androidx.compose.foundation.BorderStroke
 import za.co.statecapture.android.ui.calculator.CalculationViewModel
 import za.co.statecapture.android.ui.calculator.QuickCalculatorContent
+import androidx.compose.ui.platform.LocalContext
+import android.content.Intent
+import android.net.Uri
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -77,9 +81,9 @@ fun TariffInfoScreen(
                 modifier = Modifier.fillMaxWidth()
             ) {
                 val defaultColor = MaterialTheme.colorScheme.primary
-                val providerColor = remember(uiState.selectedProvider, defaultColor) {
+                val providerColor = remember(uiState.selectedIndexItem, defaultColor) {
                     try {
-                        uiState.selectedProvider?.color?.let { Color(AndroidColor.parseColor(it)) } ?: defaultColor
+                        uiState.selectedIndexItem?.color?.let { Color(AndroidColor.parseColor(it)) } ?: defaultColor
                     } catch (e: Exception) {
                         defaultColor
                     }
@@ -88,7 +92,7 @@ fun TariffInfoScreen(
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Box(modifier = Modifier.size(12.dp).background(providerColor, CircleShape))
                     Spacer(modifier = Modifier.width(12.dp))
-                    Text(uiState.selectedProvider?.name ?: "Select Provider")
+                    Text(uiState.selectedIndexItem?.name ?: "Select Provider")
                 }
             }
 
@@ -98,11 +102,37 @@ fun TariffInfoScreen(
                     onDismiss = { showProviderDialog = false },
                     onSelect = {
                         viewModel.onProviderSelected(it)
-                        calcViewModel.onProviderSelected(it)
+                        // Wait for full provider to be loaded before updating calcViewModel
+                        // For now, calcViewModel might not work until full provider is there.
+                        // We will update it when the uiState updates.
                         showProviderDialog = false
                     }
                 )
             }
+
+            // Sync calculation view model when selected provider finishes loading
+            LaunchedEffect(uiState.selectedProvider) {
+                uiState.selectedProvider?.let { calcViewModel.setProviderDirectly(it) }
+            }
+
+            if (uiState.isLoading) {
+                Spacer(modifier = Modifier.height(32.dp))
+                Box(modifier = Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
+                    CircularProgressIndicator()
+                }
+            } else if (uiState.error != null) {
+                Spacer(modifier = Modifier.height(16.dp))
+                Card(
+                    modifier = Modifier.fillMaxWidth(),
+                    colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.errorContainer)
+                ) {
+                    Text(
+                        text = uiState.error!!,
+                        modifier = Modifier.padding(16.dp),
+                        color = MaterialTheme.colorScheme.onErrorContainer
+                    )
+                }
+            } else {
 
             uiState.selectedProvider?.let { provider ->
                 Spacer(modifier = Modifier.height(24.dp))
@@ -139,6 +169,7 @@ fun TariffInfoScreen(
                     showProviderSelector = false
                 )
             }
+            }
             
             Spacer(modifier = Modifier.weight(1f))
             
@@ -157,7 +188,14 @@ fun TariffDetailCard(
     provider: TariffProvider,
     accentColor: Color
 ) {
-    val period = provider.periods.firstOrNull() ?: return
+    val context = LocalContext.current
+    val date = java.time.LocalDate.now()
+    val period = provider.periods.find { p ->
+        val validFrom = java.time.LocalDate.parse(p.validFrom)
+        val validTo = p.validTo?.let { java.time.LocalDate.parse(it) }
+        (date.isEqual(validFrom) || date.isAfter(validFrom)) &&
+        (validTo == null || date.isEqual(validTo) || date.isBefore(validTo))
+    } ?: provider.periods.lastOrNull() ?: return
     
     Card(
         modifier = Modifier.fillMaxWidth(),
@@ -177,6 +215,23 @@ fun TariffDetailCard(
                 text = "Type: ${provider.type.replaceFirstChar { it.uppercase() }}",
                 style = MaterialTheme.typography.labelSmall
             )
+            Text(
+                text = "Valid: ${period.validFrom} to ${period.validTo ?: "Current"}",
+                style = MaterialTheme.typography.labelSmall
+            )
+            
+            if (provider.officialUrl != null) {
+                Spacer(modifier = Modifier.height(4.dp))
+                Text(
+                    text = "View Official Document ↗",
+                    style = MaterialTheme.typography.labelMedium,
+                    color = MaterialTheme.colorScheme.primary,
+                    modifier = Modifier.clickable {
+                        val intent = Intent(Intent.ACTION_VIEW, Uri.parse(provider.officialUrl))
+                        context.startActivity(intent)
+                    }
+                )
+            }
             
             if (period.fixedMonthlyChargeCents > 0) {
                 Spacer(modifier = Modifier.height(8.dp))

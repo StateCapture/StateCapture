@@ -1,15 +1,21 @@
 package za.co.statecapture.android.data.repository
 
 import android.content.Context
-import za.co.statecapture.android.R
-import za.co.statecapture.android.data.AppDatabase
-import za.co.statecapture.android.data.TariffProviderEntity
-import za.co.statecapture.android.domain.model.TariffData
-import za.co.statecapture.android.domain.model.TariffProvider
-import kotlinx.serialization.json.Json
-import java.io.InputStreamReader
+import android.util.Log
+import com.jakewharton.retrofit2.converter.kotlinx.serialization.asConverterFactory
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
+import kotlinx.serialization.json.Json
+import okhttp3.MediaType
+import retrofit2.Retrofit
+import za.co.statecapture.android.data.AppDatabase
+import za.co.statecapture.android.data.TariffIndexEntity
+import za.co.statecapture.android.data.TariffProviderEntity
+import za.co.statecapture.android.data.network.TariffApi
+import za.co.statecapture.android.domain.model.TariffIndexItem
+import za.co.statecapture.android.domain.model.TariffProvider
+import za.co.statecapture.android.util.AppConstants
+import java.time.LocalDate
 
 class TariffRepository(private val context: Context) {
     
@@ -17,57 +23,121 @@ class TariffRepository(private val context: Context) {
     private val database = AppDatabase.getDatabase(context)
     private val tariffDao = database.tariffDao()
 
+    private val retrofit = Retrofit.Builder()
+        .baseUrl(AppConstants.TARIFF_BASE_URL)
+        .addConverterFactory(json.asConverterFactory(MediaType.parse("application/json")!!))
+        .build()
+
+    private val api = retrofit.create(TariffApi::class.java)
+
     // Per-provider in-memory cache
     private val providerCache = mutableMapOf<String, TariffProvider>()
 
-    suspend fun getTariffData(): TariffData = withContext(Dispatchers.IO) {
-        // For backwards compatibility or when full list is needed
-        val providers = getAllProviders()
-        TariffData(version = "1.0", lastUpdated = "", providers = providers)
-    }
-
-    suspend fun getAllProviders(): List<TariffProvider> = withContext(Dispatchers.IO) {
-        ensureDataLoaded()
-        val entities = tariffDao.getAllProviders()
-        entities.map { entity ->
-            // Update cache while we're at it
-            providerCache[entity.id] ?: entity.toDomain().also { providerCache[entity.id] = it }
+    suspend fun ensureIndexLoaded() = withContext(Dispatchers.IO) {
+        try {
+            val response = api.getIndex()
+            val entities = response.plans.map { item ->
+                TariffIndexEntity(
+                    id = item.id,
+                    name = item.name,
+                    type = item.type,
+                    color = item.color,
+                    providerId = item.providerId,
+                    files = item.files
+                )
+            }
+            tariffDao.upsertIndex(entities)
+        } catch (e: Exception) {
+            Log.e("TariffRepository", "Failed to load index from network", e)
+            // It's okay if we fail, we'll just rely on the DB cache
         }
     }
 
-    suspend fun getProvider(id: String): TariffProvider? = withContext(Dispatchers.IO) {
-        // Check cache first
-        providerCache[id]?.let { return@withContext it }
+    suspend fun getAllProviders(): List<TariffIndexItem> = withContext(Dispatchers.IO) {
+        val entities = tariffDao.getIndex()
+        if (entities.isEmpty()) {
+            ensureIndexLoaded()
+            return@withContext tariffDao.getIndex().map { it.toDomain() }
+        }
+        entities.map { it.toDomain() }
+    }
 
-        ensureDataLoaded()
-        val entity = tariffDao.getProviderById(id)
+    suspend fun getProvider(id: String, date: LocalDate = LocalDate.now()): TariffProvider? = withContext(Dispatchers.IO) {
+        // Look up the required file path from the index
+        val indexItem = tariffDao.getIndexItem(id) ?: return@withContext null
+        
+        // Find the file that covers the requested date
+        val fileEntry = indexItem.files.find { file ->
+            val validFrom = LocalDate.parse(file.validFrom)
+            val validTo = file.validTo?.let { LocalDate.parse(it) }
+            
+            (date.isEqual(validFrom) || date.isAfter(validFrom)) &&
+            (validTo == null || date.isEqual(validTo) || date.isBefore(validTo))
+        } ?: indexItem.files.lastOrNull() // fallback to the latest known file if date is in the far future
+
+        // Check cache / DB
+        var entity = tariffDao.getProviderById(id)
+        
+        // If we found a specific file for this date, check if our local entity already has a period covering the date
+        var hasPeriodForDate = false
+        if (entity != null) {
+            hasPeriodForDate = entity.periods.any { period ->
+                val validFrom = LocalDate.parse(period.validFrom)
+                val validTo = period.validTo?.let { LocalDate.parse(it) }
+                (date.isEqual(validFrom) || date.isAfter(validFrom)) &&
+                (validTo == null || date.isEqual(validTo) || date.isBefore(validTo))
+            }
+        }
+
+        if (!hasPeriodForDate && fileEntry != null) {
+            try {
+                // Download specific file
+                val fileData = api.getProviderFile(fileEntry.path)
+                val downloadedTariff = fileData.tariffs.find { it.id == id }
+                
+                if (downloadedTariff != null) {
+                    val officialUrl = fileData.officialUrl
+                    
+                    if (entity == null) {
+                        entity = TariffProviderEntity(
+                            id = downloadedTariff.id,
+                            name = downloadedTariff.name,
+                            type = downloadedTariff.type,
+                            color = downloadedTariff.color,
+                            officialUrl = officialUrl,
+                            periods = downloadedTariff.periods
+                        )
+                    } else {
+                        // Merge periods: keep existing, add new ones (prevent exact duplicates by validFrom)
+                        val existingFromDates = entity.periods.map { it.validFrom }.toSet()
+                        val newPeriods = downloadedTariff.periods.filter { it.validFrom !in existingFromDates }
+                        entity = entity.copy(
+                            officialUrl = officialUrl ?: entity.officialUrl,
+                            periods = (entity.periods + newPeriods).sortedBy { it.validFrom }
+                        )
+                    }
+                    tariffDao.insertAll(listOf(entity))
+                    providerCache[id] = entity.toDomain()
+                }
+            } catch (e: Exception) {
+                Log.e("TariffRepository", "Failed to load provider file: ${fileEntry.path}", e)
+            }
+        }
+
+        // Return from cache or DB
+        providerCache[id]?.let { return@withContext it }
         entity?.toDomain()?.also {
             providerCache[id] = it
         }
     }
 
-    private suspend fun ensureDataLoaded() {
-        val inputStream = context.resources.openRawResource(R.raw.tariffs)
-        val jsonString = InputStreamReader(inputStream).readText()
-        val data = json.decodeFromString<TariffData>(jsonString)
-        
-        val prefs = context.getSharedPreferences("tariff_prefs", Context.MODE_PRIVATE)
-        val storedLastUpdated = prefs.getString("last_updated", "")
-
-        if (tariffDao.getCount() == 0 || data.lastUpdated != storedLastUpdated) {
-            val entities = data.providers.map { it.toEntity() }
-            tariffDao.insertAll(entities)
-            prefs.edit().putString("last_updated", data.lastUpdated).apply()
-            providerCache.clear()
-        }
-    }
-
-    private fun TariffProvider.toEntity() = TariffProviderEntity(
+    private fun TariffIndexEntity.toDomain() = TariffIndexItem(
         id = id,
         name = name,
         type = type,
         color = color,
-        periods = periods
+        providerId = providerId,
+        files = files
     )
 
     private fun TariffProviderEntity.toDomain() = TariffProvider(
@@ -75,6 +145,7 @@ class TariffRepository(private val context: Context) {
         name = name,
         type = type,
         color = color,
+        officialUrl = officialUrl,
         periods = periods
     )
 }

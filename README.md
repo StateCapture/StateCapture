@@ -94,13 +94,38 @@ app/src/main/java/za/co/statecapture/android/
 
 ## 🗂️ Tariff Data JSON Schema
 
-The app loads tariff specifications from `app/src/main/res/raw/tariffs.json` (and fetches updates remotely). You can add or correct tariffs using this structure:
+The app now uses a modular, downloadable tariff system hosted remotely. The root configuration is defined in an `index.json` file which points to individual tariff JSON files for each year and provider.
 
+### `index.json` Schema
 ```json
 {
-  "version": "1.0-OFFICIAL",
-  "last_updated": "2026-04-30",
-  "providers": [
+  "last_updated": "2026-06-10",
+  "plans": [
+    {
+      "id": "tshwane_prepaid",
+      "name": "City of Tshwane - Residential Prepaid",
+      "type": "municipality",
+      "color": "#008751",
+      "provider_id": "tshwane",
+      "files": [
+        {
+          "valid_from": "2026-07-01",
+          "valid_to": "2027-06-30",
+          "path": "2026/tshwane.json"
+        }
+      ]
+    }
+  ]
+}
+```
+
+### Provider Schema (e.g. `2026/tshwane.json`)
+```json
+{
+  "id": "tshwane",
+  "name": "City of Tshwane",
+  "official_url": "https://www.tshwane.gov.za",
+  "tariffs": [
     {
       "id": "tshwane_prepaid",
       "name": "City of Tshwane - Residential Prepaid",
@@ -108,14 +133,14 @@ The app loads tariff specifications from `app/src/main/res/raw/tariffs.json` (an
       "color": "#008751",
       "periods": [
         {
-          "valid_from": "2025-07-01",
-          "valid_to": "2026-06-30",
+          "valid_from": "2026-07-01",
+          "valid_to": "2027-06-30",
           "fixed_monthly_charge_cents": 0,
           "blocks": [
-            { "min_kwh": 0, "max_kwh": 100, "rate_per_kwh_cents": 297.90 },
-            { "min_kwh": 101, "max_kwh": 400, "rate_per_kwh_cents": 348.64 },
-            { "min_kwh": 401, "max_kwh": 650, "rate_per_kwh_cents": 379.84 },
-            { "min_kwh": 651, "max_kwh": 999999, "rate_per_kwh_cents": 409.48 }
+            { "min_kwh": 0, "max_kwh": 100, "rate_per_kwh_cents": 324.12 },
+            { "min_kwh": 101, "max_kwh": 400, "rate_per_kwh_cents": 379.32 },
+            { "min_kwh": 401, "max_kwh": 650, "rate_per_kwh_cents": 413.27 },
+            { "min_kwh": 651, "max_kwh": 999999, "rate_per_kwh_cents": 445.51 }
           ]
         }
       ]

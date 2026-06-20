@@ -24,12 +24,37 @@ data class TariffProvider(
     val name: String,
     val type: String, // "eskom" or "municipality"
     val color: String? = null,
+    val officialUrl: String? = null,
     val periods: List<TariffPeriod>
 )
 
 @Serializable
-data class TariffData(
-    val version: String,
+data class TariffIndexFileItem(
+    @SerialName("valid_from") val validFrom: String,
+    @SerialName("valid_to") val validTo: String?,
+    val path: String
+)
+
+@Serializable
+data class TariffIndexItem(
+    val id: String,
+    val name: String,
+    val type: String,
+    val color: String? = null,
+    @SerialName("provider_id") val providerId: String,
+    val files: List<TariffIndexFileItem>
+)
+
+@Serializable
+data class IndexResponse(
     @SerialName("last_updated") val lastUpdated: String,
-    val providers: List<TariffProvider>
+    val plans: List<TariffIndexItem>
+)
+
+@Serializable
+data class TariffProviderFile(
+    val id: String,
+    val name: String,
+    @SerialName("official_url") val officialUrl: String? = null,
+    val tariffs: List<TariffProvider>
 )

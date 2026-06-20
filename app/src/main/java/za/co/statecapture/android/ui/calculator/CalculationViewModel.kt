@@ -8,6 +8,7 @@ import za.co.statecapture.android.data.repository.TariffRepository
 import za.co.statecapture.android.domain.engine.CalculationResult
 import za.co.statecapture.android.domain.engine.TariffCalculator
 import za.co.statecapture.android.domain.model.TariffProvider
+import za.co.statecapture.android.domain.model.TariffIndexItem
 import za.co.statecapture.android.util.AppConstants
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
@@ -125,8 +126,27 @@ class CalculationViewModel(
         }
     }
 
-    fun onProviderSelected(provider: TariffProvider) {
-        _uiState.update { it.copy(selectedProvider = provider) }
+    fun onProviderSelected(indexItem: TariffIndexItem) {
+        _uiState.update { it.copy(selectedIndexItem = indexItem) }
+        viewModelScope.launch {
+            try {
+                val provider = repository.getProvider(indexItem.id)
+                if (provider != null) {
+                    _uiState.update { it.copy(selectedProvider = provider) }
+                    if (_uiState.value.selectedMeter != null) {
+                        updateMonthlyTotal()
+                    } else {
+                        calculateResult()
+                    }
+                }
+            } catch (e: Exception) {
+                _uiState.update { it.copy(errorMessage = "Failed to load provider: ${e.message}") }
+            }
+        }
+    }
+    
+    fun setProviderDirectly(provider: TariffProvider) {
+        _uiState.update { it.copy(selectedProvider = provider, selectedIndexItem = null) }
         if (_uiState.value.selectedMeter != null) {
             updateMonthlyTotal()
         } else {
@@ -412,7 +432,8 @@ data class CalculationUiState(
     val inputAmount: String = "",
     val mode: CalculationMode = CalculationMode.RandsToKwh,
     val includeVat: Boolean = true,
-    val providers: List<TariffProvider> = emptyList(),
+    val providers: List<TariffIndexItem> = emptyList(),
+    val selectedIndexItem: TariffIndexItem? = null,
     val selectedProvider: TariffProvider? = null,
     val selectedMeter: Meter? = null,
     val result: CalculationDisplayResult? = null,

@@ -5,7 +5,7 @@ import androidx.lifecycle.viewModelScope
 import za.co.statecapture.android.data.Meter
 import za.co.statecapture.android.data.MeterDao
 import za.co.statecapture.android.data.repository.TariffRepository
-import za.co.statecapture.android.domain.model.TariffProvider
+import za.co.statecapture.android.domain.model.TariffIndexItem
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 
@@ -21,8 +21,8 @@ class MeterViewModel(
             initialValue = emptyList()
         )
 
-    private val _availableProviders = MutableStateFlow<List<TariffProvider>>(emptyList())
-    val availableProviders: StateFlow<List<TariffProvider>> = _availableProviders.asStateFlow()
+    private val _availableProviders = MutableStateFlow<List<TariffIndexItem>>(emptyList())
+    val availableProviders: StateFlow<List<TariffIndexItem>> = _availableProviders.asStateFlow()
 
     init {
         loadProviders()
@@ -36,6 +36,9 @@ class MeterViewModel(
 
     fun addMeter(name: String, meterNumber: String, providerId: String, isDefault: Boolean, icon: String = "⚡") {
         viewModelScope.launch {
+            // Proactively fetch the provider so it is cached
+            repository.getProvider(providerId)
+            
             val nextOrder = (meters.value.maxByOrNull { it.displayOrder }?.displayOrder ?: -1) + 1
             dao.insertMeter(
                 Meter(

@@ -7,9 +7,14 @@ import kotlinx.coroutines.launch
 import za.co.statecapture.android.data.repository.TariffRepository
 import za.co.statecapture.android.domain.model.TariffProvider
 
+import za.co.statecapture.android.domain.model.TariffIndexItem
+
 data class TariffUiState(
-    val providers: List<TariffProvider> = emptyList(),
-    val selectedProvider: TariffProvider? = null
+    val providers: List<TariffIndexItem> = emptyList(),
+    val selectedProvider: TariffProvider? = null,
+    val selectedIndexItem: TariffIndexItem? = null,
+    val isLoading: Boolean = false,
+    val error: String? = null
 )
 
 class TariffViewModel(private val repository: TariffRepository) : ViewModel() {
@@ -22,15 +27,31 @@ class TariffViewModel(private val repository: TariffRepository) : ViewModel() {
 
     private fun loadTariffData() {
         viewModelScope.launch {
-            val providers = repository.getAllProviders()
-            _uiState.update { it.copy(
-                providers = providers,
-                selectedProvider = providers.firstOrNull()
-            ) }
+            try {
+                val providers = repository.getAllProviders()
+                _uiState.update { it.copy(providers = providers) }
+                if (providers.isNotEmpty()) {
+                    onProviderSelected(providers.first())
+                }
+            } catch (e: Exception) {
+                _uiState.update { it.copy(error = "Failed to load index") }
+            }
         }
     }
 
-    fun onProviderSelected(provider: TariffProvider) {
-        _uiState.update { it.copy(selectedProvider = provider) }
+    fun onProviderSelected(indexItem: TariffIndexItem) {
+        viewModelScope.launch {
+            _uiState.update { it.copy(selectedIndexItem = indexItem, isLoading = true, error = null) }
+            try {
+                val provider = repository.getProvider(indexItem.id)
+                if (provider != null) {
+                    _uiState.update { it.copy(selectedProvider = provider, isLoading = false) }
+                } else {
+                    _uiState.update { it.copy(isLoading = false, error = "Provider data not found") }
+                }
+            } catch (e: Exception) {
+                _uiState.update { it.copy(isLoading = false, error = "Failed to load provider data") }
+            }
+        }
     }
 }

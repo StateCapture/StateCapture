@@ -18,4 +18,13 @@ interface TariffDao {
 
     @Query("SELECT COUNT(*) FROM tariff_providers")
     suspend fun getCount(): Int
+
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun upsertIndex(items: List<TariffIndexEntity>)
+
+    @Query("SELECT * FROM tariff_index")
+    suspend fun getIndex(): List<TariffIndexEntity>
+
+    @Query("SELECT * FROM tariff_index WHERE id = :id")
+    suspend fun getIndexItem(id: String): TariffIndexEntity?
 }

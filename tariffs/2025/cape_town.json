@@ -1,0 +1,52 @@
+{
+    "id": "cape_town",
+    "name": "City of Cape Town",
+    "official_url": "https://www.capetown.gov.za",
+    "tariffs": [
+        {
+            "id": "cape_town_home_user",
+            "name": "City of Cape Town - Home User",
+            "type": "municipality",
+            "color": "#009FDF",
+            "periods": [
+                {
+                    "valid_from": "2025-07-01",
+                    "valid_to": "2026-06-30",
+                    "fixed_monthly_charge_cents": 33989,
+                    "blocks": [
+                        {
+                            "min_kwh": 0,
+                            "max_kwh": 600,
+                            "rate_per_kwh_cents": 294.0
+                        },
+                        {
+                            "min_kwh": 601,
+                            "max_kwh": 999999,
+                            "rate_per_kwh_cents": 384.0
+                        }
+                    ]
+                }
+            ]
+        },
+        {
+            "id": "cape_town_lifeline",
+            "name": "City of Cape Town - Lifeline",
+            "type": "municipality",
+            "color": "#009FDF",
+            "periods": [
+                {
+                    "valid_from": "2025-07-01",
+                    "valid_to": "2026-06-30",
+                    "fixed_monthly_charge_cents": 0,
+                    "blocks": [
+                        {
+                            "min_kwh": 0,
+                            "max_kwh": 600,
+                            "rate_per_kwh_cents": 226.96
+                        }
+                    ]
+                }
+            ]
+        }
+    ]
+}

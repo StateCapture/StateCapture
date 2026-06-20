@@ -29,7 +29,7 @@ import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.launch
 import za.co.statecapture.android.ui.components.SearchableProviderDialog
 import za.co.statecapture.android.data.Meter
-import za.co.statecapture.android.domain.model.TariffProvider
+import za.co.statecapture.android.domain.model.TariffIndexItem
 import za.co.statecapture.android.ui.theme.ProviderThemedBlock
 import android.graphics.Color as AndroidColor
 import androidx.compose.foundation.lazy.rememberLazyListState
@@ -50,7 +50,7 @@ private const val ACTION_THRESHOLD_DP = 80
 @Composable
 fun MeterScreen(
     meters: List<Meter>,
-    availableProviders: List<TariffProvider>,
+    availableProviders: List<TariffIndexItem>,
     onAddMeter: (String, String, String, Boolean, String) -> Unit,
     onUpdateMeter: (Meter) -> Unit,
     onReorderMeters: (Int, Int) -> Unit,
@@ -150,7 +150,7 @@ fun MeterScreen(
 @Composable
 fun SwipeableMeterItem(
     meter: Meter,
-    provider: TariffProvider?,
+    provider: TariffIndexItem?,
     isDragging: Boolean,
     dragOffset: Float,
     onDelete: () -> Unit,
@@ -324,7 +324,7 @@ fun MeterDialog(
     title: String,
     confirmLabel: String,
     initialMeter: Meter? = null,
-    availableProviders: List<TariffProvider>,
+    availableProviders: List<TariffIndexItem>,
     onDismiss: () -> Unit,
     onConfirm: (String, String, String, String) -> Unit
 ) {
