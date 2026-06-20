@@ -205,6 +205,11 @@
             "provider_id": "tshwane",
             "files": [
                 {
+                    "valid_from": "2026-07-01",
+                    "valid_to": "2027-06-30",
+                    "path": "2026/tshwane.json"
+                },
+                {
                     "valid_from": "2025-07-01",
                     "valid_to": "2026-06-30",
                     "path": "2025/tshwane.json"
@@ -218,6 +223,11 @@
             "color": "#008751",
             "provider_id": "tshwane",
             "files": [
+                {
+                    "valid_from": "2026-07-01",
+                    "valid_to": "2027-06-30",
+                    "path": "2026/tshwane.json"
+                },
                 {
                     "valid_from": "2025-07-01",
                     "valid_to": "2026-06-30",
