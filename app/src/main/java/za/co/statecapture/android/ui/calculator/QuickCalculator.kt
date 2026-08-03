@@ -39,6 +39,8 @@ fun QuickCalculatorContent(
     val uiState by viewModel.uiState.collectAsState()
     var showProviderDialog by remember { mutableStateOf(false) }
 
+    val blocks = uiState.selectedProvider?.periods?.lastOrNull()?.blocks
+
     Column(modifier = Modifier.fillMaxWidth()) {
         // ── Global VAT toggle ──────────────────────────────────────────
         Row(
@@ -87,14 +89,23 @@ fun QuickCalculatorContent(
             Spacer(modifier = Modifier.height(16.dp))
         }
 
-        // Mode selector
-        SingleChoiceSegmentedButtonRow(modifier = Modifier.fillMaxWidth()) {
-            SegmentedButton(selected = uiState.mode == CalculationMode.RandsToKwh, onClick = { viewModel.onModeChange(CalculationMode.RandsToKwh) }, shape = SegmentedButtonDefaults.itemShape(0, 2)) { Text("Rands → Units") }
-            SegmentedButton(selected = uiState.mode == CalculationMode.KwhToRands, onClick = { viewModel.onModeChange(CalculationMode.KwhToRands) }, shape = SegmentedButtonDefaults.itemShape(1, 2)) { Text("Units → Rands") }
+        // Visual IBT Progress Bar for "Try it out"
+        if (!blocks.isNullOrEmpty()) {
+            Text(
+                "Block Visualisation:", 
+                style = MaterialTheme.typography.labelSmall, 
+                color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.8f)
+            )
+            Spacer(modifier = Modifier.height(6.dp))
+            IbtProgressBar(
+                blocks = blocks,
+                breakdown = emptyList(),
+                pendingBreakdown = uiState.result?.result?.blockBreakdown
+            )
+            Spacer(modifier = Modifier.height(16.dp))
         }
-        Spacer(modifier = Modifier.height(16.dp))
 
-        // Amount input
+        // Amount input (placed immediately below IbtProgressBar)
         OutlinedTextField(
             value = uiState.inputAmount,
             onValueChange = { viewModel.onInputAmountChange(it) },
@@ -111,6 +122,13 @@ fun QuickCalculatorContent(
             modifier = Modifier.fillMaxWidth(),
             singleLine = true
         )
+        Spacer(modifier = Modifier.height(12.dp))
+
+        // Mode selector
+        SingleChoiceSegmentedButtonRow(modifier = Modifier.fillMaxWidth()) {
+            SegmentedButton(selected = uiState.mode == CalculationMode.RandsToKwh, onClick = { viewModel.onModeChange(CalculationMode.RandsToKwh) }, shape = SegmentedButtonDefaults.itemShape(0, 2)) { Text("Rands → Units") }
+            SegmentedButton(selected = uiState.mode == CalculationMode.KwhToRands, onClick = { viewModel.onModeChange(CalculationMode.KwhToRands) }, shape = SegmentedButtonDefaults.itemShape(1, 2)) { Text("Units → Rands") }
+        }
         Spacer(modifier = Modifier.height(16.dp))
 
         // Result
@@ -121,11 +139,7 @@ fun QuickCalculatorContent(
         ) { displayResult ->
             if (displayResult != null) {
                 Column {
-                    ProviderThemedBlock(provider = uiState.selectedProvider) {
-                        ResultCard(displayResult)
-                    }
-
-                    // Smart Warnings
+                    CalculationSummaryCard(displayResult = displayResult)
                     SmartWarningsSection(uiState.smartWarnings)
                 }
             }
