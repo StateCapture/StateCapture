@@ -894,6 +894,7 @@ fun IbtProgressBar(
                 )
 
                 val blockColor = ibtBlockColor(index, blocks.size)
+                val isFinalUnlimitedBlock = blocks[index].maxKwh >= 999_999
                 val shape = when {
                     blocks.size == 1 -> RoundedCornerShape(6.dp)
                     index == 0 -> RoundedCornerShape(topStart = 6.dp, bottomStart = 6.dp, topEnd = 2.dp, bottomEnd = 2.dp)
@@ -960,6 +961,19 @@ fun IbtProgressBar(
                             modifier = Modifier.align(Alignment.Center)
                         )
                     }
+
+                    // Infinity indicator on the right edge of the final unlimited block
+                    if (isFinalUnlimitedBlock) {
+                        Text(
+                            text = "∞",
+                            color = if (animatedTotalFraction > 0.8f) Color.White.copy(alpha = 0.9f) else blockColor.copy(alpha = 0.85f),
+                            style = MaterialTheme.typography.labelSmall,
+                            fontWeight = FontWeight.Bold,
+                            modifier = Modifier
+                                .align(Alignment.CenterEnd)
+                                .padding(end = 5.dp)
+                        )
+                    }
                 }
             }
         }
@@ -990,15 +1004,15 @@ fun IbtProgressBar(
 
                     val labelText = if (pendingConsumed > 0) {
                         if (isFinalUnlimitedBlock) {
-                            if (existingConsumed > 0) "${String.format(Locale.US, "%.0f", existingConsumed)}+${String.format(Locale.US, "%.0f", pendingConsumed)}"
-                            else String.format(Locale.US, "+%.0f", pendingConsumed)
+                            if (existingConsumed > 0) "${String.format(Locale.US, "%.0f", existingConsumed)}+${String.format(Locale.US, "%.0f", pendingConsumed)}/∞"
+                            else "${String.format(Locale.US, "%.0f", pendingConsumed)}/∞"
                         } else {
                             if (existingConsumed > 0) "${String.format(Locale.US, "%.0f", existingConsumed)}+${String.format(Locale.US, "%.0f", pendingConsumed)}/${blockCapacity.toInt()}"
                             else "${String.format(Locale.US, "%.0f", pendingConsumed)}/${blockCapacity.toInt()}"
                         }
                     } else {
                         if (isFinalUnlimitedBlock) {
-                            String.format(Locale.US, "%.0f", existingConsumed)
+                            "${String.format(Locale.US, "%.0f", existingConsumed)}/∞"
                         } else {
                             "${String.format(Locale.US, "%.0f", existingConsumed)}/${blockCapacity.toInt()}"
                         }
