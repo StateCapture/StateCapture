@@ -51,6 +51,7 @@ import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.launch
 import za.co.statecapture.android.data.Purchase
 import za.co.statecapture.android.domain.engine.CalculationResult
+import za.co.statecapture.android.domain.engine.BlockYield
 import za.co.statecapture.android.util.AppConstants
 import za.co.statecapture.android.ui.components.SearchableProviderDialog
 import za.co.statecapture.android.ui.theme.ProviderThemedBlock
@@ -64,6 +65,12 @@ import android.app.DatePickerDialog
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.ui.text.style.TextAlign
+
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.tween
+import androidx.compose.ui.graphics.lerp
+import androidx.compose.ui.graphics.Brush
+import za.co.statecapture.android.domain.model.TariffBlock
 
 private val SaBlue = SA_Blue
 private val SaRed  = SA_Red
@@ -212,7 +219,9 @@ fun CalculationScreen(
                                 Text("Total Units", style = MaterialTheme.typography.labelSmall)
                             }
                         }
-                        if (uiState.cumulativeBreakdown.isNotEmpty()) {
+                        // IBT Progress Bar — always visible when provider has blocks
+                        val blocks = uiState.selectedProvider?.periods?.lastOrNull()?.blocks
+                        if (!blocks.isNullOrEmpty()) {
                             Spacer(modifier = Modifier.height(12.dp))
                             HorizontalDivider(color = MaterialTheme.colorScheme.onSecondaryContainer.copy(alpha = 0.1f))
                             Spacer(modifier = Modifier.height(8.dp))
@@ -222,27 +231,40 @@ fun CalculationScreen(
                                 verticalAlignment = Alignment.CenterVertically
                             ) {
                                 Text("Block Distribution:", style = MaterialTheme.typography.labelSmall)
-                                Surface(
-                                    color = Success_Green.copy(alpha = 0.1f),
-                                    shape = RoundedCornerShape(4.dp)
-                                ) {
-                                    Text(
-                                        "Block Tracking ON",
-                                        color = Success_Green,
-                                        style = MaterialTheme.typography.labelSmall,
-                                        modifier = Modifier.padding(horizontal = 4.dp, vertical = 2.dp)
-                                    )
+                                val hasPending = uiState.result != null
+                                if (hasPending) {
+                                    Surface(
+                                        color = MaterialTheme.colorScheme.primary.copy(alpha = 0.12f),
+                                        shape = RoundedCornerShape(4.dp)
+                                    ) {
+                                        Text(
+                                            "Existing + Projected",
+                                            color = MaterialTheme.colorScheme.primary,
+                                            style = MaterialTheme.typography.labelSmall,
+                                            fontWeight = FontWeight.Bold,
+                                            modifier = Modifier.padding(horizontal = 4.dp, vertical = 2.dp)
+                                        )
+                                    }
+                                } else if (uiState.cumulativeBreakdown.isNotEmpty()) {
+                                    Surface(
+                                        color = Success_Green.copy(alpha = 0.1f),
+                                        shape = RoundedCornerShape(4.dp)
+                                    ) {
+                                        Text(
+                                            "Block Tracking ON",
+                                            color = Success_Green,
+                                            style = MaterialTheme.typography.labelSmall,
+                                            modifier = Modifier.padding(horizontal = 4.dp, vertical = 2.dp)
+                                        )
+                                    }
                                 }
                             }
-                            uiState.cumulativeBreakdown.forEach { block ->
-                                Row(
-                                    modifier = Modifier.fillMaxWidth().padding(vertical = 2.dp),
-                                    horizontalArrangement = Arrangement.SpaceBetween
-                                ) {
-                                    Text("Block ${block.blockIndex}", style = MaterialTheme.typography.bodySmall)
-                                    Text("${String.format("%.1f", block.kwhYield)} kWh", style = MaterialTheme.typography.bodySmall)
-                                }
-                            }
+                            Spacer(modifier = Modifier.height(6.dp))
+                            IbtProgressBar(
+                                blocks = blocks,
+                                breakdown = uiState.cumulativeBreakdown,
+                                pendingBreakdown = uiState.result?.result?.blockBreakdown
+                            )
                         }
                     }
                 }
@@ -263,21 +285,7 @@ fun CalculationScreen(
                         }
                         Spacer(modifier = Modifier.height(16.dp))
                     } else {
-                        // Mode selector
-                        SingleChoiceSegmentedButtonRow(modifier = Modifier.fillMaxWidth()) {
-                            SegmentedButton(selected = uiState.mode == CalculationMode.RandsToKwh, onClick = { viewModel.onModeChange(CalculationMode.RandsToKwh) }, shape = SegmentedButtonDefaults.itemShape(0, 2)) { Text("Rands → Units") }
-                            SegmentedButton(selected = uiState.mode == CalculationMode.KwhToRands, onClick = { viewModel.onModeChange(CalculationMode.KwhToRands) }, shape = SegmentedButtonDefaults.itemShape(1, 2)) { Text("Units → Rands") }
-                        }
-                        Spacer(modifier = Modifier.height(16.dp))
-
-                        // Block Shortcuts
-                        BlockShortcutsRow(
-                            uiState = uiState,
-                            onShortcutClick = { viewModel.onBlockShortcutClick(it) }
-                        )
-                        Spacer(modifier = Modifier.height(8.dp))
-        
-                        // Amount input
+                        // Amount input (placed immediately below top card / visualization)
                         OutlinedTextField(
                             value = uiState.inputAmount,
                             onValueChange = { viewModel.onInputAmountChange(it) },
@@ -294,6 +302,20 @@ fun CalculationScreen(
                             modifier = Modifier.fillMaxWidth(),
                             singleLine = true
                         )
+                        Spacer(modifier = Modifier.height(12.dp))
+
+                        // Mode selector
+                        SingleChoiceSegmentedButtonRow(modifier = Modifier.fillMaxWidth()) {
+                            SegmentedButton(selected = uiState.mode == CalculationMode.RandsToKwh, onClick = { viewModel.onModeChange(CalculationMode.RandsToKwh) }, shape = SegmentedButtonDefaults.itemShape(0, 2)) { Text("Rands → Units") }
+                            SegmentedButton(selected = uiState.mode == CalculationMode.KwhToRands, onClick = { viewModel.onModeChange(CalculationMode.KwhToRands) }, shape = SegmentedButtonDefaults.itemShape(1, 2)) { Text("Units → Rands") }
+                        }
+                        Spacer(modifier = Modifier.height(12.dp))
+
+                        // Block Shortcuts ("Quick fill" pills)
+                        BlockShortcutsRow(
+                            uiState = uiState,
+                            onShortcutClick = { viewModel.onBlockShortcutClick(it) }
+                        )
                         Spacer(modifier = Modifier.height(16.dp))
         
                         // Result
@@ -304,16 +326,16 @@ fun CalculationScreen(
                         ) { displayResult ->
                             if (displayResult != null) {
                                 Column {
-                                    ProviderThemedBlock(provider = uiState.selectedProvider) {
-                                        ResultCard(displayResult)
-                                    }
+                                    CalculationSummaryCard(
+                                        displayResult = displayResult
+                                    )
                                     
                                     // Smart Warnings
                                     SmartWarningsSection(uiState.smartWarnings)
                                     
                                     // Only allow recording in the current month
                                     val canRecord = (uiState.result?.result?.totalCostCents ?: -1.0) >= 0 && (uiState.result?.result?.totalKwh ?: 0.0) > 0
-                                    Spacer(modifier = Modifier.height(16.dp))
+                                    Spacer(modifier = Modifier.height(12.dp))
                                     Button(
                                         onClick = { viewModel.savePurchase() }, 
                                         modifier = Modifier.fillMaxWidth(),
@@ -600,7 +622,7 @@ fun BlockShortcutsRow(
             horizontalArrangement = Arrangement.spacedBy(8.dp)
         ) {
             blocks.dropLast(1).forEach { block ->
-                val isExhausted = uiState.monthlyCumulativeKwh >= block.maxKwh
+                val isExhausted = uiState.monthlyCumulativeKwh >= (block.maxKwh - AppConstants.BLOCK_EXHAUSTION_TOLERANCE_KWH)
                 FilterChip(
                     selected = false,
                     onClick = { onShortcutClick(block.maxKwh.toDouble()) },
@@ -612,7 +634,7 @@ fun BlockShortcutsRow(
                         disabledLabelColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.38f)
                     ),
                     border = FilterChipDefaults.filterChipBorder(
-                        enabled = true,
+                        enabled = !isExhausted,
                         selected = false,
                         borderColor = MaterialTheme.colorScheme.outlineVariant
                     )
@@ -788,3 +810,297 @@ fun BlockShortcutsRow(
     )
 }
 
+// ── IBT Progress Bar ──────────────────────────────────────────────────────────
+
+/** Anchor colours for the IBT block gradient: cheap → expensive */
+private val IbtColorStart = Color(0xFF4CAF50) // green  (cheapest block)
+private val IbtColorEnd   = Color(0xFFE53935) // red    (most expensive block)
+
+/**
+ * Returns the appropriate colour for a block at [index] out of [total] blocks,
+ * always spanning the full green→red gradient regardless of block count.
+ *
+ * Examples:
+ *   1 block  → green
+ *   2 blocks → green, red
+ *   3 blocks → green, orange, red
+ *   4 blocks → green, amber, deep-orange, red
+ */
+private fun ibtBlockColor(index: Int, total: Int): Color {
+    if (total <= 1) return IbtColorStart
+    val fraction = index.toFloat() / (total - 1).toFloat()
+    return lerp(IbtColorStart, IbtColorEnd, fraction)
+}
+
+@Composable
+fun IbtProgressBar(
+    blocks: List<TariffBlock>,
+    breakdown: List<BlockYield>,
+    pendingBreakdown: List<BlockYield>? = null,
+    modifier: Modifier = Modifier
+) {
+    if (blocks.isEmpty()) return
+
+    // Quick lookup: blockIndex (1-based) → kWh consumed specifically within that block
+    val consumedByBlock = breakdown.associate { it.blockIndex to it.kwhYield }
+    val pendingByBlock = pendingBreakdown?.associate { it.blockIndex to it.kwhYield } ?: emptyMap()
+
+    // Dynamic capacity calculation for each block to handle the infinite block cleanly
+    val capacities = remember(blocks, consumedByBlock, pendingByBlock) {
+        val list = mutableListOf<Double>()
+        var prevMax = 0
+        blocks.forEachIndexed { index, block ->
+            val isInfinite = block.maxKwh >= 999_999
+            val consumed = (consumedByBlock[index + 1] ?: 0.0) + (pendingByBlock[index + 1] ?: 0.0)
+            if (isInfinite) {
+                val prevCapacity = if (index > 0) list[index - 1] else 100.0
+                val cap = maxOf(consumed, prevCapacity).coerceAtLeast(1.0)
+                list.add(cap)
+            } else {
+                val cap = (block.maxKwh - prevMax).toDouble().coerceAtLeast(1.0)
+                list.add(cap)
+                prevMax = block.maxKwh
+            }
+        }
+        list
+    }
+
+    Column(modifier = modifier.fillMaxWidth()) {
+        // Segmented bar
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(22.dp),
+            horizontalArrangement = Arrangement.spacedBy(3.dp)
+        ) {
+            blocks.forEachIndexed { index, _ ->
+                val blockCapacity = capacities[index]
+                val existingConsumed = consumedByBlock[index + 1] ?: 0.0
+                val pendingConsumed = pendingByBlock[index + 1] ?: 0.0
+                val totalConsumed = existingConsumed + pendingConsumed
+
+                val existingFraction = (existingConsumed / blockCapacity).coerceIn(0.0, 1.0).toFloat()
+                val totalFraction = (totalConsumed / blockCapacity).coerceIn(0.0, 1.0).toFloat()
+
+                val animatedExistingFraction by animateFloatAsState(
+                    targetValue = existingFraction,
+                    animationSpec = tween(durationMillis = 600),
+                    label = "block_existing_fill_$index"
+                )
+                val animatedTotalFraction by animateFloatAsState(
+                    targetValue = totalFraction,
+                    animationSpec = tween(durationMillis = 600),
+                    label = "block_total_fill_$index"
+                )
+
+                val blockColor = ibtBlockColor(index, blocks.size)
+                val shape = when {
+                    blocks.size == 1 -> RoundedCornerShape(6.dp)
+                    index == 0 -> RoundedCornerShape(topStart = 6.dp, bottomStart = 6.dp, topEnd = 2.dp, bottomEnd = 2.dp)
+                    index == blocks.lastIndex -> RoundedCornerShape(topStart = 2.dp, bottomStart = 2.dp, topEnd = 6.dp, bottomEnd = 6.dp)
+                    else -> RoundedCornerShape(2.dp)
+                }
+
+                Box(
+                    modifier = Modifier
+                        .weight(1f) // Equal width for all block segments
+                        .fillMaxHeight()
+                        .clip(shape)
+                        .background(blockColor.copy(alpha = 0.18f))
+                ) {
+                    // Projected/Pending Layer (Total Fill)
+                    if (animatedTotalFraction > 0f) {
+                        Box(
+                            modifier = Modifier
+                                .fillMaxHeight()
+                                .fillMaxWidth(animatedTotalFraction)
+                                .background(
+                                    Brush.horizontalGradient(
+                                        colors = listOf(
+                                            blockColor.copy(alpha = 0.35f),
+                                            blockColor.copy(alpha = 0.50f)
+                                        )
+                                    )
+                                )
+                        )
+                    }
+
+                    // Existing Solid Layer
+                    if (animatedExistingFraction > 0f) {
+                        Box(
+                            modifier = Modifier
+                                .fillMaxHeight()
+                                .fillMaxWidth(animatedExistingFraction)
+                                .background(
+                                    Brush.horizontalGradient(
+                                        colors = listOf(
+                                            blockColor.copy(alpha = 0.75f),
+                                            blockColor
+                                        )
+                                    )
+                                )
+                        )
+                    }
+
+                    // Checkmark icons
+                    if (animatedExistingFraction >= 0.999f) {
+                        Text(
+                            text = "✓",
+                            color = Color.White,
+                            style = MaterialTheme.typography.labelSmall,
+                            fontWeight = FontWeight.Bold,
+                            modifier = Modifier.align(Alignment.Center)
+                        )
+                    } else if (animatedTotalFraction >= 0.999f && pendingConsumed > 0) {
+                        Text(
+                            text = "+✓",
+                            color = Color.White.copy(alpha = 0.9f),
+                            style = MaterialTheme.typography.labelSmall,
+                            fontWeight = FontWeight.Bold,
+                            modifier = Modifier.align(Alignment.Center)
+                        )
+                    }
+                }
+            }
+        }
+
+        // Labels below each segment
+        Spacer(modifier = Modifier.height(5.dp))
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(3.dp)
+        ) {
+            blocks.forEachIndexed { index, block ->
+                val blockCapacity = capacities[index]
+                val existingConsumed = consumedByBlock[index + 1] ?: 0.0
+                val pendingConsumed = pendingByBlock[index + 1] ?: 0.0
+                val blockColor = ibtBlockColor(index, blocks.size)
+                val isFinalUnlimitedBlock = block.maxKwh >= 999_999
+
+                Column(
+                    modifier = Modifier.weight(1f), // Equal width alignment for labels
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
+                    Text(
+                        text = "Block ${index + 1}",
+                        style = MaterialTheme.typography.labelSmall,
+                        color = blockColor,
+                        fontWeight = FontWeight.Bold
+                    )
+
+                    val labelText = if (pendingConsumed > 0) {
+                        if (isFinalUnlimitedBlock) {
+                            if (existingConsumed > 0) "${String.format(Locale.US, "%.0f", existingConsumed)}+${String.format(Locale.US, "%.0f", pendingConsumed)}"
+                            else String.format(Locale.US, "+%.0f", pendingConsumed)
+                        } else {
+                            if (existingConsumed > 0) "${String.format(Locale.US, "%.0f", existingConsumed)}+${String.format(Locale.US, "%.0f", pendingConsumed)}/${blockCapacity.toInt()}"
+                            else "${String.format(Locale.US, "%.0f", pendingConsumed)}/${blockCapacity.toInt()}"
+                        }
+                    } else {
+                        if (isFinalUnlimitedBlock) {
+                            String.format(Locale.US, "%.0f", existingConsumed)
+                        } else {
+                            "${String.format(Locale.US, "%.0f", existingConsumed)}/${blockCapacity.toInt()}"
+                        }
+                    }
+
+                    Text(
+                        text = labelText,
+                        style = MaterialTheme.typography.labelSmall,
+                        color = if (pendingConsumed > 0) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSecondaryContainer.copy(alpha = 0.7f),
+                        fontWeight = if (pendingConsumed > 0) FontWeight.Bold else FontWeight.Normal,
+                        textAlign = TextAlign.Center
+                    )
+
+                    val rateCents = block.ratePerKwhCents
+                    Text(
+                        text = if (rateCents == 0.0) "Free" else "R${String.format(Locale.US, "%.2f", rateCents / 100.0)}",
+                        style = MaterialTheme.typography.labelSmall,
+                        color = blockColor.copy(alpha = 0.85f),
+                        fontWeight = if (rateCents == 0.0) FontWeight.Bold else FontWeight.Normal,
+                        textAlign = TextAlign.Center
+                    )
+                }
+            }
+        }
+    }
+}
+
+@Composable
+fun CalculationSummaryCard(
+    displayResult: CalculationDisplayResult,
+    modifier: Modifier = Modifier
+) {
+    val result = displayResult.result
+    val includeVat = displayResult.includeVat
+    val mode = displayResult.mode
+    val vatAmountCents = displayResult.vatAmountCents
+    val totalDisplayCents = if (includeVat) result.totalCostCents + vatAmountCents else result.totalCostCents
+
+    Card(
+        modifier = modifier.fillMaxWidth(),
+        colors = CardDefaults.cardColors(
+            containerColor = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.25f)
+        ),
+        border = BorderStroke(1.dp, MaterialTheme.colorScheme.primary.copy(alpha = 0.4f))
+    ) {
+        Column(
+            modifier = Modifier.padding(14.dp),
+            verticalArrangement = Arrangement.spacedBy(6.dp)
+        ) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Column {
+                    Text(
+                        text = if (mode == CalculationMode.RandsToKwh) "Estimated Units Yield" else "Total Purchase Cost",
+                        style = MaterialTheme.typography.labelMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                    Text(
+                        text = if (mode == CalculationMode.RandsToKwh) {
+                            "${String.format(Locale.US, "%.1f", result.totalKwh)} kWh"
+                        } else {
+                            "R ${String.format(Locale.US, "%.2f", totalDisplayCents / 100.0)}"
+                        },
+                        style = MaterialTheme.typography.titleLarge,
+                        fontWeight = FontWeight.Black,
+                        color = MaterialTheme.colorScheme.primary
+                    )
+                }
+
+                Column(horizontalAlignment = Alignment.End) {
+                    Text(
+                        text = if (mode == CalculationMode.RandsToKwh) "Total Cost (${if (includeVat) "incl. VAT" else "excl. VAT"})" else "Total Yield",
+                        style = MaterialTheme.typography.labelSmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                    Text(
+                        text = if (mode == CalculationMode.RandsToKwh) {
+                            "R ${String.format(Locale.US, "%.2f", totalDisplayCents / 100.0)}"
+                        } else {
+                            "${String.format(Locale.US, "%.1f", result.totalKwh)} kWh"
+                        },
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.Bold
+                    )
+                }
+            }
+
+            if (result.fixedChargeCents > 0) {
+                HorizontalDivider(color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.1f))
+                val fixedChargeDisplay = if (includeVat) result.fixedChargeCents * AppConstants.VAT_MULTIPLIER else result.fixedChargeCents.toDouble()
+                val fixedChargeLabel = if (displayResult.fixedChargeAlreadyPaid) "Fixed charge already paid this month" else "Includes monthly fixed charge"
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween
+                ) {
+                    Text(fixedChargeLabel, style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.secondary)
+                    Text("R${String.format(Locale.US, "%.2f", fixedChargeDisplay / 100.0)}", style = MaterialTheme.typography.labelSmall, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.secondary)
+                }
+            }
+        }
+    }
+}

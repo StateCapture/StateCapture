@@ -115,7 +115,7 @@ class CalculationViewModel(
         val currentKwh = _uiState.value.monthlyCumulativeKwh
         val neededKwh = (targetCumulativeKwh - currentKwh).coerceAtLeast(0.0)
         
-        if (neededKwh > 0) {
+        if (neededKwh > AppConstants.BLOCK_EXHAUSTION_TOLERANCE_KWH) {
             _uiState.update { 
                 it.copy(
                     mode = CalculationMode.KwhToRands,
@@ -276,7 +276,12 @@ class CalculationViewModel(
                 purchaseDao.getMonthlyTotalKwhBetween(meter.id, startOfMonth, startOfNextMonth) ?: 0.0
             }
 
-            val breakdown = calculator.calculateCumulativeBreakdown(provider, totalKwh)
+            // Use the last day of the selected month as the reference date so that
+            // calculateCumulativeBreakdown picks the tariff period that was actually
+            // active during that month, not today's (possibly newer) period.
+            val referenceDate = if (isCurrentMonth) LocalDate.now() else ym.atEndOfMonth()
+            val breakdown = calculator.calculateCumulativeBreakdown(provider, totalKwh, referenceDate)
+
             val allHistory = purchaseDao.getPurchasesForMeter(meter.id).first()
 
             val monthHistory = allHistory.filter {
