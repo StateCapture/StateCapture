@@ -32,6 +32,12 @@ object AppConstants {
     const val VAT_RATE = 0.15
     const val VAT_MULTIPLIER = 1.0 + VAT_RATE
 
+    /**
+     * Small kWh tolerance (0.05 units) used to treat a tariff block as fully exhausted
+     * when cumulative monthly consumption is within floating-point precision noise of the block threshold.
+     */
+    const val BLOCK_EXHAUSTION_TOLERANCE_KWH = 0.05
+
     const val APP_DISCLAIMER =
         "This app cannot be used to purchase prepaid vouchers. Its sole purpose is ONLY to track the purchases that you have already made or help you plan for future purchases.\n\n" +
                 "This app is provided free of charge 'as is'. Tariff data was gathered from public records and interpreted using AI. AI sometimes makes mistakes. Always verify tariffs with your utility provider. If you find discrepancies, please inform us using the Feedback screen."

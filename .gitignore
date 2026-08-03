@@ -14,3 +14,8 @@ capture.png
 .idea/
 *.iml
 .vscode/
+
+# Local Scratch / Docs
+IMPLEMENTATION_PLAN.md
+TODO.md
+screenshots/

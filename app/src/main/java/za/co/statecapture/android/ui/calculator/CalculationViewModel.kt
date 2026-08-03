@@ -115,7 +115,7 @@ class CalculationViewModel(
         val currentKwh = _uiState.value.monthlyCumulativeKwh
         val neededKwh = (targetCumulativeKwh - currentKwh).coerceAtLeast(0.0)
         
-        if (neededKwh > 0) {
+        if (neededKwh > AppConstants.BLOCK_EXHAUSTION_TOLERANCE_KWH) {
             _uiState.update { 
                 it.copy(
                     mode = CalculationMode.KwhToRands,
@@ -146,11 +146,20 @@ class CalculationViewModel(
     }
     
     fun setProviderDirectly(provider: TariffProvider) {
-        _uiState.update { it.copy(selectedProvider = provider, selectedIndexItem = null) }
-        if (_uiState.value.selectedMeter != null) {
-            updateMonthlyTotal()
-        } else {
-            calculateResult()
+        // Called from the Tariffs screen's "Try it out" section via its own dedicated
+        // CalculationViewModel instance (not shared with the Meter Calculator screen).
+        // Reset cumulative state so calculations always start fresh at Block 1.
+        _uiState.update {
+            it.copy(
+                selectedProvider = provider,
+                selectedIndexItem = null,
+                monthlyCumulativeKwh = 0.0,
+                monthlyCumulativeAmountCents = 0.0,
+                monthlyCumulativeVatCents = 0.0,
+                cumulativeBreakdown = emptyList(),
+                result = null,
+                inputAmount = ""
+            )
         }
     }
 
@@ -276,7 +285,12 @@ class CalculationViewModel(
                 purchaseDao.getMonthlyTotalKwhBetween(meter.id, startOfMonth, startOfNextMonth) ?: 0.0
             }
 
-            val breakdown = calculator.calculateCumulativeBreakdown(provider, totalKwh)
+            // Use the last day of the selected month as the reference date so that
+            // calculateCumulativeBreakdown picks the tariff period that was actually
+            // active during that month, not today's (possibly newer) period.
+            val referenceDate = if (isCurrentMonth) LocalDate.now() else ym.atEndOfMonth()
+            val breakdown = calculator.calculateCumulativeBreakdown(provider, totalKwh, referenceDate)
+
             val allHistory = purchaseDao.getPurchasesForMeter(meter.id).first()
 
             val monthHistory = allHistory.filter {

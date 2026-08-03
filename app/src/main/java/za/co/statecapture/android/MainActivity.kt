@@ -180,13 +180,20 @@ class MainActivity : ComponentActivity() {
 
                                         "tariffs" -> {
                                             val tariffState by tariffViewModel.uiState.collectAsState()
+                                            // Dedicated CalculationViewModel for the Tariffs screen —
+                                            // keyed separately so it never shares state with the Meter
+                                            // Calculator's ViewModel instance.
+                                            val tariffCalcViewModel: CalculationViewModel = viewModel(
+                                                key = "tariff_calc",
+                                                factory = factory
+                                            )
                                             DynamicTariffTheme(
                                                 provider = tariffState.selectedProvider,
                                                 isHomeScreen = tariffState.selectedProvider == null
                                             ) {
                                                 TariffInfoScreen(
                                                     viewModel = tariffViewModel,
-                                                    calcViewModel = calcViewModel,
+                                                    calcViewModel = tariffCalcViewModel,
                                                     onMenuClick = { scope.launch { drawerState.open() } }
                                                 )
                                             }
