@@ -146,11 +146,20 @@ class CalculationViewModel(
     }
     
     fun setProviderDirectly(provider: TariffProvider) {
-        _uiState.update { it.copy(selectedProvider = provider, selectedIndexItem = null) }
-        if (_uiState.value.selectedMeter != null) {
-            updateMonthlyTotal()
-        } else {
-            calculateResult()
+        // Called from the Tariffs screen's "Try it out" section via its own dedicated
+        // CalculationViewModel instance (not shared with the Meter Calculator screen).
+        // Reset cumulative state so calculations always start fresh at Block 1.
+        _uiState.update {
+            it.copy(
+                selectedProvider = provider,
+                selectedIndexItem = null,
+                monthlyCumulativeKwh = 0.0,
+                monthlyCumulativeAmountCents = 0.0,
+                monthlyCumulativeVatCents = 0.0,
+                cumulativeBreakdown = emptyList(),
+                result = null,
+                inputAmount = ""
+            )
         }
     }
 
