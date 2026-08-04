@@ -2,6 +2,20 @@
     "last_updated": "2026-06-10",
     "plans": [
         {
+            "id": "cape_town_domestic",
+            "name": "City of Cape Town - Domestic",
+            "type": "municipality",
+            "color": "#009FDF",
+            "provider_id": "cape_town",
+            "files": [
+                {
+                    "valid_from": "2026-07-01",
+                    "valid_to": "2027-06-30",
+                    "path": "2026/cape_town.json"
+                }
+            ]
+        },
+        {
             "id": "cape_town_home_user",
             "name": "City of Cape Town - Home User",
             "type": "municipality",
@@ -12,6 +26,11 @@
                     "valid_from": "2025-07-01",
                     "valid_to": "2026-06-30",
                     "path": "2025/cape_town.json"
+                },
+                {
+                    "valid_from": "2026-07-01",
+                    "valid_to": "2027-06-30",
+                    "path": "2026/cape_town.json"
                 }
             ]
         },
@@ -26,6 +45,11 @@
                     "valid_from": "2025-07-01",
                     "valid_to": "2026-06-30",
                     "path": "2025/cape_town.json"
+                },
+                {
+                    "valid_from": "2026-07-01",
+                    "valid_to": "2027-06-30",
+                    "path": "2026/cape_town.json"
                 }
             ]
         },
@@ -40,6 +64,11 @@
                     "valid_from": "2025-07-01",
                     "valid_to": "2026-06-30",
                     "path": "2025/joburg_city_power.json"
+                },
+                {
+                    "valid_from": "2026-07-01",
+                    "valid_to": "2027-06-30",
+                    "path": "2027/joburg_city_power.json"
                 }
             ]
         },
@@ -54,6 +83,11 @@
                     "valid_from": "2025-07-01",
                     "valid_to": "2026-06-30",
                     "path": "2025/joburg_city_power.json"
+                },
+                {
+                    "valid_from": "2026-07-01",
+                    "valid_to": "2027-06-30",
+                    "path": "2026/joburg_city_power.json"
                 }
             ]
         },
@@ -68,6 +102,11 @@
                     "valid_from": "2025-07-01",
                     "valid_to": "2026-06-30",
                     "path": "2025/nelson_mandela_bay.json"
+                },
+                {
+                    "valid_from": "2026-07-01",
+                    "valid_to": "2027-06-30",
+                    "path": "2026/nelson_mandela_bay.json"
                 }
             ]
         },
@@ -82,6 +121,11 @@
                     "valid_from": "2025-07-01",
                     "valid_to": "2026-06-30",
                     "path": "2025/nelson_mandela_bay.json"
+                },
+                {
+                    "valid_from": "2026-07-01",
+                    "valid_to": "2027-06-30",
+                    "path": "2026/nelson_mandela_bay.json"
                 }
             ]
         },
@@ -96,6 +140,11 @@
                     "valid_from": "2025-07-01",
                     "valid_to": "2026-06-30",
                     "path": "2025/ethekwini.json"
+                },
+                {
+                    "valid_from": "2026-07-01",
+                    "valid_to": "2027-06-30",
+                    "path": "2026/ethekwini.json"
                 }
             ]
         },
@@ -110,6 +159,11 @@
                     "valid_from": "2025-07-01",
                     "valid_to": "2026-06-30",
                     "path": "2025/ethekwini.json"
+                },
+                {
+                    "valid_from": "2026-07-01",
+                    "valid_to": "2027-06-30",
+                    "path": "2026/ethekwini.json"
                 }
             ]
         },
@@ -124,6 +178,11 @@
                     "valid_from": "2025-07-01",
                     "valid_to": "2026-06-30",
                     "path": "2025/mangaung.json"
+                },
+                {
+                    "valid_from": "2026-07-01",
+                    "valid_to": "2027-06-30",
+                    "path": "2026/mangaung.json"
                 }
             ]
         },
@@ -138,6 +197,11 @@
                     "valid_from": "2025-07-01",
                     "valid_to": "2026-06-30",
                     "path": "2025/mangaung.json"
+                },
+                {
+                    "valid_from": "2026-07-01",
+                    "valid_to": "2027-06-30",
+                    "path": "2026/mangaung.json"
                 }
             ]
         },
@@ -152,6 +216,11 @@
                     "valid_from": "2025-07-01",
                     "valid_to": "2026-06-30",
                     "path": "2025/buffalo_city.json"
+                },
+                {
+                    "valid_from": "2026-07-01",
+                    "valid_to": "2027-06-30",
+                    "path": "2026/buffalo_city.json"
                 }
             ]
         },
@@ -166,20 +235,39 @@
                     "valid_from": "2025-07-01",
                     "valid_to": "2026-06-30",
                     "path": "2025/buffalo_city.json"
+                },
+                {
+                    "valid_from": "2026-07-01",
+                    "valid_to": "2027-06-30",
+                    "path": "2026/buffalo_city.json"
                 }
             ]
         },
         {
-            "id": "ekurhuleni_tariff_a",
-            "name": "City of Ekurhuleni - Tariff A (Low)",
+            "id": "ekurhuleni_tariff_a_1",
+            "name": "City of Ekurhuleni - Tariff A.1 (Registered Indigent)",
             "type": "municipality",
             "color": "#0054A4",
             "provider_id": "ekurhuleni",
             "files": [
                 {
-                    "valid_from": "2025-07-01",
-                    "valid_to": "2026-06-30",
-                    "path": "2025/ekurhuleni.json"
+                    "valid_from": "2026-07-01",
+                    "valid_to": "2027-06-30",
+                    "path": "2026/ekurhuleni.json"
+                }
+            ]
+        },
+        {
+            "id": "ekurhuleni_tariff_a_2",
+            "name": "City of Ekurhuleni - Tariff A.2 (Low)",
+            "type": "municipality",
+            "color": "#0054A4",
+            "provider_id": "ekurhuleni",
+            "files": [
+                {
+                    "valid_from": "2026-07-01",
+                    "valid_to": "2027-06-30",
+                    "path": "2026/ekurhuleni.json"
                 }
             ]
         },
@@ -194,6 +282,11 @@
                     "valid_from": "2025-07-01",
                     "valid_to": "2026-06-30",
                     "path": "2025/ekurhuleni.json"
+                },
+                {
+                    "valid_from": "2026-07-01",
+                    "valid_to": "2027-06-30",
+                    "path": "2026/ekurhuleni.json"
                 }
             ]
         },

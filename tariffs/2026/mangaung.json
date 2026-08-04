@@ -1,0 +1,71 @@
+{
+    "id": "mangaung",
+    "name": "Centlec (Mangaung)",
+    "official_url": "https://www.centlec.co.za",
+    "document_link": "https://centlec.co.za/Tariffs/ViewFile?filePath=wwwroot%2FUploadedFiles%2FTariffs%2FNERSA%20APPROVED%20MMM%20ELECTRICTY%20TARIFFS%20FOR%20THE%20PERIOD%201%20JULY%202026%20-%2030%20JUNE%202027_94cc.pdf",
+    "tariffs": [
+        {
+            "id": "mangaung_residential",
+            "name": "Mangaung (Centlec) - Indigent Prepaid",
+            "type": "municipality",
+            "color": "#DA291C",
+            "periods": [
+                {
+                    "valid_from": "2026-07-01",
+                    "valid_to": "2027-06-30",
+                    "fixed_monthly_charge_cents": 0,
+                    "comments": [
+                        "These are the summer tariffs. State Capture does not yet support different tariffs for different seasons",
+                        "It's unclear from the document whether these tariffs include or exclude VAT"
+                    ],
+                    "blocks": [
+                        {
+                            "min_kwh": 0,
+                            "max_kwh": 50,
+                            "rate_per_kwh_cents": 237.38
+                        },
+                        {
+                            "min_kwh": 51,
+                            "max_kwh": 350,
+                            "rate_per_kwh_cents": 252.77
+                        },
+                        {
+                            "min_kwh": 351,
+                            "max_kwh": 999999,
+                            "rate_per_kwh_cents": 343.99
+                        }
+                    ]
+                }
+            ]
+        },
+        {
+            "id": "mangaung_indigent",
+            "name": "Mangaung (Centlec) - Domestic",
+            "type": "municisality",
+            "color": "#DA291C",
+            "periods": [
+                {
+                    "valid_from": "2026-07-01",
+                    "valid_to": "2027-06-30",
+                    "fixed_monthly_charge_cents": 5000,
+                    "comments": [
+                        "These are the summer tariffs. State Capture does not yet support different tariffs for different seasons",
+                        "It's unclear from the document whether these tariffs include or exclude VAT"
+                    ],
+                    "blocks": [
+                        {
+                            "min_kwh": 0,
+                            "max_kwh": 350,
+                            "rate_per_kwh_cents": 304.42
+                        },
+                        {
+                            "min_kwh": 351,
+                            "max_kwh": 999999,
+                            "rate_per_kwh_cents": 350.58
+                        }
+                    ]
+                }
+            ]
+        }
+    ]
+}
