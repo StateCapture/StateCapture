@@ -1,0 +1,53 @@
+{
+    "id": "ethekwini",
+    "name": "eThekwini Municipality",
+    "official_url": "https://www.durban.gov.za",
+    "document_link": "https://energybee.co.za/news/ethekwini-electricity-tariffs-2026",
+    "tariffs": [
+        {
+            "id": "ethekwini_residential",
+            "name": "eThekwini (Durban) - Residential Standard",
+            "type": "municipality",
+            "color": "#004F31",
+            "periods": [
+                {
+                    "valid_from": "2026-07-01",
+                    "valid_to": "2027-06-30",
+                    "fixed_monthly_charge_cents": 0,
+                    "blocks": [
+                        {
+                            "min_kwh": 0,
+                            "max_kwh": 999999,
+                            "rate_per_kwh_cents": 362.38
+                        }
+                    ]
+                }
+            ]
+        },
+        {
+            "id": "ethekwini_indigent",
+            "name": "eThekwini (Durban) - Indigent/Lifeline",
+            "type": "municipality",
+            "color": "#004F31",
+            "periods": [
+                {
+                    "valid_from": "2026-07-01",
+                    "valid_to": "2027-06-30",
+                    "fixed_monthly_charge_cents": 0,
+                    "blocks": [
+                        {
+                            "min_kwh": 0,
+                            "max_kwh": 65,
+                            "rate_per_kwh_cents": 0.0
+                        },
+                        {
+                            "min_kwh": 66,
+                            "max_kwh": 999999,
+                            "rate_per_kwh_cents": 235.50
+                        }
+                    ]
+                }
+            ]
+        }
+    ]
+}

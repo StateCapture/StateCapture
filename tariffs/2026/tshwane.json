@@ -27,7 +27,7 @@
                         {
                             "min_kwh": 401,
                             "max_kwh": 650,
-                            "rate_per_kwh_cents": 413.27
+                            "rate_per_kwh_cents": 413.26
                         },
                         {
                             "min_kwh": 651,

@@ -2,6 +2,7 @@
     "id": "nelson_mandela_bay",
     "name": "Nelson Mandela Bay Municipality",
     "official_url": "https://www.nelsonmandelabay.gov.za",
+    "document_link": "https://www.nelsonmandelabay.gov.za/DataRepository/Documents/nmbm-tariff-booklet-2025-202607072025_E3Ap8.pdf",
     "tariffs": [
         {
             "id": "nelson_mandela_bay_standard",
@@ -10,9 +11,13 @@
             "color": "#004B87",
             "periods": [
                 {
-                    "valid_from": "2025-07-01",
-                    "valid_to": "2026-06-30",
+                    "valid_from": "2026-07-01",
+                    "valid_to": "2027-06-30",
                     "fixed_monthly_charge_cents": 0,
+                    "comments": [
+                        "These are still the 2025/2026 tariffs.",
+                        "The Gqeberha high court has ordered the Nelson Mandela Bay municipality to reinstate the block electricity tariffs that were in place last year and refund residents for any additional costs incurred under the new flat-rate tariff introduced on July 1."
+                    ],
                     "blocks": [
                         {
                             "min_kwh": 0,
@@ -40,9 +45,13 @@
             "color": "#004B87",
             "periods": [
                 {
-                    "valid_from": "2025-07-01",
-                    "valid_to": "2026-06-30",
+                    "valid_from": "2026-07-01",
+                    "valid_to": "2027-06-30",
                     "fixed_monthly_charge_cents": 0,
+                    "comments": [
+                        "These are still the 2025/2026 tariffs.",
+                        "The Gqeberha high court has ordered the Nelson Mandela Bay municipality to reinstate the block electricity tariffs that were in place last year and refund residents for any additional costs incurred under the new flat-rate tariff introduced on July 1."
+                    ],
                     "blocks": [
                         {
                             "min_kwh": 0,

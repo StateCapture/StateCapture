@@ -1,0 +1,85 @@
+{
+    "id": "cape_town",
+    "name": "City of Cape Town",
+    "official_url": "https://www.capetown.gov.za",
+    "document_link": "https://www.capetown.gov.za/Family%20and%20home/residential-utility-services/residential-electricity-services/the-cost-of-electricity",
+    "tariffs": [
+        {
+            "id": "cape_town_domestic",
+            "name": "City of Cape Town - Domestic",
+            "type": "municipality",
+            "color": "#009FDF",
+            "periods": [
+                {
+                    "valid_from": "2026-07-01",
+                    "valid_to": "2027-06-30",
+                    "comments": [
+                        "Fixed monthly charge is calculated from a daily rate of R2.14 per day (excluding VAT)"
+                    ],
+                    "fixed_monthly_charge_cents": 6527,
+                    "blocks": [
+                        {
+                            "min_kwh": 0,
+                            "max_kwh": 600,
+                            "rate_per_kwh_cents": 359.82
+                        },
+                        {
+                            "min_kwh": 601,
+                            "max_kwh": 999999,
+                            "rate_per_kwh_cents": 429.48
+                        }
+                    ]
+                }
+            ]
+        },
+        {
+            "id": "cape_town_home_user",
+            "name": "City of Cape Town - Home User",
+            "type": "municipality",
+            "color": "#009FDF",
+            "periods": [
+                {
+                    "valid_from": "2026-07-01",
+                    "valid_to": "2027-06-30",
+                    "fixed_monthly_charge_cents": 36896,
+                    "blocks": [
+                        {
+                            "min_kwh": 0,
+                            "max_kwh": 600,
+                            "rate_per_kwh_cents": 309.52
+                        },
+                        {
+                            "min_kwh": 601,
+                            "max_kwh": 999999,
+                            "rate_per_kwh_cents": 407.88
+                        }
+                    ]
+                }
+            ]
+        },
+        {
+            "id": "cape_town_lifeline",
+            "name": "City of Cape Town - Lifeline",
+            "type": "municipality",
+            "color": "#009FDF",
+            "periods": [
+                {
+                    "valid_from": "2026-07-01",
+                    "valid_to": "2027-06-30",
+                    "fixed_monthly_charge_cents": 0,
+                    "comments": [
+                        "Qualifying Lifeline customers receive either 60 kWh or 25 kWh of free basic electricity each month, depending on their average monthly electricity use.",
+                        "To remain on the Lifeline tariff, the average monthly electricity use over a 12-month period must be 450 kWh or less."
+                    ],
+                    "blocks": [
+                        {
+                            "min_kwh": 0,
+                            "max_kwh": 600,
+                            "rate_per_kwh_cents": 246.12
+                        }
+                    ]
+                }
+            ]
+        }
+    ]
+}

@@ -2,6 +2,7 @@
     "id": "joburg_city_power",
     "name": "City Power Joburg",
     "official_url": "https://www.citypower.co.za",
+    "document_link": "https://energybee.co.za/news/city-power-tariffs-july-2026-bill-breakdown",
     "tariffs": [
         {
             "id": "joburg_city_power_low",
@@ -10,24 +11,24 @@
             "color": "#FFD700",
             "periods": [
                 {
-                    "valid_from": "2025-07-01",
-                    "valid_to": "2026-06-30",
+                    "valid_from": "2026-07-01",
+                    "valid_to": "2027-06-30",
                     "fixed_monthly_charge_cents": 0,
                     "blocks": [
                         {
                             "min_kwh": 0,
                             "max_kwh": 350,
-                            "rate_per_kwh_cents": 249.86
+                            "rate_per_kwh_cents": 272.37
                         },
                         {
                             "min_kwh": 351,
                             "max_kwh": 500,
-                            "rate_per_kwh_cents": 305.64
+                            "rate_per_kwh_cents": 333.18
                         },
                         {
                             "min_kwh": 501,
                             "max_kwh": 999999,
-                            "rate_per_kwh_cents": 370.42
+                            "rate_per_kwh_cents": 413.06
                         }
                     ]
                 }
@@ -40,24 +41,24 @@
             "color": "#FFD700",
             "periods": [
                 {
-                    "valid_from": "2025-07-01",
-                    "valid_to": "2026-06-30",
-                    "fixed_monthly_charge_cents": 20000,
+                    "valid_from": "2026-07-01",
+                    "valid_to": "2027-06-30",
+                    "fixed_monthly_charge_cents": 21000,
                     "blocks": [
                         {
                             "min_kwh": 0,
                             "max_kwh": 350,
-                            "rate_per_kwh_cents": 266.45
+                            "rate_per_kwh_cents": 290.46
                         },
                         {
                             "min_kwh": 351,
                             "max_kwh": 500,
-                            "rate_per_kwh_cents": 305.64
+                            "rate_per_kwh_cents": 333.18
                         },
                         {
                             "min_kwh": 501,
                             "max_kwh": 999999,
-                            "rate_per_kwh_cents": 348.26
+                            "rate_per_kwh_cents": 379.64
                         }
                     ]
                 }
