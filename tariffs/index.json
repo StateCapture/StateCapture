@@ -1,5 +1,5 @@
 {
-    "last_updated": "2026-08-04",
+    "last_updated": "2026-08-05",
     "plans": [
         {
             "id": "cape_town_domestic",
@@ -68,7 +68,7 @@
                 {
                     "valid_from": "2026-07-01",
                     "valid_to": "2027-06-30",
-                    "path": "2027/joburg_city_power.json"
+                    "path": "2026/joburg_city_power.json"
                 }
             ]
         },
