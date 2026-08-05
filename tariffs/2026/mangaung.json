@@ -41,7 +41,7 @@
         {
             "id": "mangaung_indigent",
             "name": "Mangaung (Centlec) - Domestic",
-            "type": "municisality",
+            "type": "municipality",
             "color": "#DA291C",
             "periods": [
                 {
