@@ -83,13 +83,20 @@ class TariffRepository(private val context: Context) {
         val today = LocalDate.now()
         tariffDao.getIndex()
             .filter { indexItem ->
-                indexItem.files.any { file ->
-                    val validFrom = LocalDate.parse(file.validFrom)
-                    val validTo = file.validTo?.let { LocalDate.parse(it) }
-                    (today.isEqual(validFrom) || today.isAfter(validFrom)) &&
-                            (validTo == null || today.isEqual(validTo) || today.isBefore(validTo))
+                // Determine financial year start based on provider type
+                val fyStart = getFinancialYearStart(indexItem.type, today)
+                if (today.isBefore(fyStart)) {
+                    false
+                } else {
+                    indexItem.files.any { file ->
+                        val validFrom = LocalDate.parse(file.validFrom)
+                        val validTo = file.validTo?.let { LocalDate.parse(it) }
+                        (today.isEqual(validFrom) || today.isAfter(validFrom)) &&
+                                (validTo == null || today.isEqual(validTo) || today.isBefore(validTo))
+                    }
                 }
             }
+
             .map { it.toDomain() }
     }
 
@@ -199,4 +206,17 @@ class TariffRepository(private val context: Context) {
         officialUrl = officialUrl,
         periods = periods
     )
+
+    // Helper to determine financial year start based on provider type
+    private fun getFinancialYearStart(providerType: String, referenceDate: LocalDate): LocalDate {
+        return if (providerType == "provider") {
+            // Eskom or provider types start fiscal year on 1 April
+            val year = if (referenceDate.monthValue >= 4) referenceDate.year else referenceDate.year - 1
+            LocalDate.of(year, 4, 1)
+        } else {
+            // Municipalities start fiscal year on 1 July
+            val year = if (referenceDate.monthValue >= 7) referenceDate.year else referenceDate.year - 1
+            LocalDate.of(year, 7, 1)
+        }
+    }
 }

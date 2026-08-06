@@ -23,6 +23,7 @@ import androidx.compose.foundation.BorderStroke
 import za.co.statecapture.android.ui.calculator.CalculationViewModel
 import za.co.statecapture.android.ui.calculator.QuickCalculatorContent
 import androidx.compose.ui.platform.LocalContext
+import android.content.Context
 import android.content.Intent
 import android.net.Uri
 
