@@ -12,9 +12,10 @@ interface TariffDao {
 
     @Query("SELECT * FROM tariff_providers")
     suspend fun getAllProviders(): List<TariffProviderEntity>
-
     @Query("SELECT * FROM tariff_providers WHERE id = :id")
     suspend fun getProviderById(id: String): TariffProviderEntity?
+    @Query("DELETE FROM tariff_providers WHERE id NOT IN (:ids)")
+    suspend fun deleteProvidersNotIn(ids: List<String>)
 
     @Query("SELECT COUNT(*) FROM tariff_providers")
     suspend fun getCount(): Int

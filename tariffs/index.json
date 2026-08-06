@@ -244,6 +244,20 @@
             ]
         },
         {
+            "id": "ekurhuleni_tariff_a",
+            "name": "City of Ekurhuleni - Tariff A (Registered Indigent)",
+            "type": "municipality",
+            "color": "#0054A4",
+            "provider_id": "ekurhuleni",
+            "files": [
+                {
+                    "valid_from": "2025-07-01",
+                    "valid_to": "2026-06-30",
+                    "path": "2025/ekurhuleni.json"
+                }
+            ]
+        },
+        {
             "id": "ekurhuleni_tariff_a_1",
             "name": "City of Ekurhuleni - Tariff A.1 (Registered Indigent)",
             "type": "municipality",
