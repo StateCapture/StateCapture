@@ -95,6 +95,24 @@ fun TariffInfoScreen(
                     Text(uiState.selectedIndexItem?.name ?: "Select Provider")
                 }
             }
+            // Timestamp label showing index last updated and local download time
+            val context = LocalContext.current
+            val prefs = context.getSharedPreferences(AppConstants.PREFS_NAME, Context.MODE_PRIVATE)
+            val indexLastUpdated = prefs.getString(AppConstants.KEY_INDEX_LAST_UPDATED, null)
+            val downloadTimestamp = prefs.getLong(AppConstants.KEY_INDEX_DOWNLOAD_TIME, 0L)
+            val formattedDownload = if (downloadTimestamp > 0) {
+                java.time.format.DateTimeFormatter.ofPattern("dd MMM yyyy HH:mm")
+                    .withZone(java.time.ZoneId.systemDefault())
+                    .format(java.time.Instant.ofEpochMilli(downloadTimestamp))
+            } else null
+            Column(modifier = Modifier.padding(top = 8.dp)) {
+                if (indexLastUpdated != null) {
+                    Text(text = "Index last updated: $indexLastUpdated", style = MaterialTheme.typography.labelSmall)
+                }
+                if (formattedDownload != null) {
+                    Text(text = "Downloaded at: $formattedDownload", style = MaterialTheme.typography.labelSmall)
+                }
+            }
 
             if (showProviderDialog) {
                 SearchableProviderDialog(
