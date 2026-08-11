@@ -329,7 +329,13 @@ fun CalculationScreen(
                             }
                         }
                         // IBT Progress Bar — always visible when provider has blocks
-                        val blocks = uiState.selectedProvider?.periods?.lastOrNull()?.blocks
+                        val refDate = if (isCurrentMonth) LocalDate.now() else uiState.selectedYearMonth.atEndOfMonth()
+                        val activePeriod = uiState.selectedProvider?.periods?.find { p ->
+                            val from = LocalDate.parse(p.validFrom)
+                            val to = p.validTo?.let { LocalDate.parse(it) }
+                            (!refDate.isBefore(from)) && (to == null || !refDate.isAfter(to))
+                        } ?: uiState.selectedProvider?.periods?.lastOrNull()
+                        val blocks = activePeriod?.blocks
                         if (!blocks.isNullOrEmpty()) {
                             Spacer(modifier = Modifier.height(12.dp))
                             HorizontalDivider(color = MaterialTheme.colorScheme.onSecondaryContainer.copy(alpha = 0.1f))
@@ -708,7 +714,14 @@ fun BlockShortcutsRow(
     uiState: CalculationUiState,
     onShortcutClick: (Double) -> Unit
 ) {
-    val blocks = uiState.selectedProvider?.periods?.lastOrNull()?.blocks ?: return
+    val isCurrentMonth = uiState.selectedYearMonth == YearMonth.now()
+    val refDate = if (isCurrentMonth) LocalDate.now() else uiState.selectedYearMonth.atEndOfMonth()
+    val activePeriod = uiState.selectedProvider?.periods?.find { p ->
+        val from = LocalDate.parse(p.validFrom)
+        val to = p.validTo?.let { LocalDate.parse(it) }
+        (!refDate.isBefore(from)) && (to == null || !refDate.isAfter(to))
+    } ?: uiState.selectedProvider?.periods?.lastOrNull()
+    val blocks = activePeriod?.blocks ?: return
     if (blocks.size <= 1) return
 
     Column {
