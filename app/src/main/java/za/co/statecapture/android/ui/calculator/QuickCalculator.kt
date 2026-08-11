@@ -116,7 +116,8 @@ fun QuickCalculatorContent(
             IbtProgressBar(
                 blocks = blocks,
                 breakdown = emptyList(),
-                pendingBreakdown = uiState.result?.result?.blockBreakdown
+                pendingBreakdown = uiState.result?.result?.blockBreakdown,
+                includeVat = uiState.includeVat
             )
             Spacer(modifier = Modifier.height(16.dp))
         }

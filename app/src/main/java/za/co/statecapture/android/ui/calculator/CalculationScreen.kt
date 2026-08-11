@@ -280,7 +280,8 @@ fun CalculationScreen(
                             IbtProgressBar(
                                 blocks = blocks,
                                 breakdown = uiState.cumulativeBreakdown,
-                                pendingBreakdown = uiState.result?.result?.blockBreakdown
+                                pendingBreakdown = uiState.result?.result?.blockBreakdown,
+                                includeVat = uiState.includeVat
                             )
                         }
                     }
@@ -854,6 +855,7 @@ fun IbtProgressBar(
     blocks: List<TariffBlock>,
     breakdown: List<BlockYield>,
     pendingBreakdown: List<BlockYield>? = null,
+    includeVat: Boolean = false,
     modifier: Modifier = Modifier
 ) {
     if (blocks.isEmpty()) return
@@ -1043,12 +1045,13 @@ fun IbtProgressBar(
                         textAlign = TextAlign.Center
                     )
 
-                    val rateCents = block.ratePerKwhCents
+                    val baseRateCents = block.ratePerKwhCents
+                    val displayRateCents = if (includeVat) baseRateCents * AppConstants.VAT_MULTIPLIER else baseRateCents
                     Text(
-                        text = if (rateCents == 0.0) "Free" else "R${String.format(Locale.US, "%.2f", rateCents / 100.0)}",
+                        text = if (baseRateCents == 0.0) "Free" else "R${String.format(Locale.US, "%.2f", displayRateCents / 100.0)}",
                         style = MaterialTheme.typography.labelSmall,
                         color = blockColor.copy(alpha = 0.85f),
-                        fontWeight = if (rateCents == 0.0) FontWeight.Bold else FontWeight.Normal,
+                        fontWeight = if (baseRateCents == 0.0) FontWeight.Bold else FontWeight.Normal,
                         textAlign = TextAlign.Center
                     )
                 }
