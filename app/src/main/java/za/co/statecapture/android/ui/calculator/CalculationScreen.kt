@@ -400,7 +400,6 @@ fun CalculationScreen(
 
             if (uiState.selectedMeter != null) {
                 if (uiState.availableFreeKwh > 0) {
-                    val fbeDateLabel = recordDate.format(DateTimeFormatter.ofPattern("d MMM"))
                     Button(
                         onClick = { showFbeDatePicker = true },
                         modifier = Modifier.fillMaxWidth(),
@@ -408,7 +407,7 @@ fun CalculationScreen(
                     ) {
                         Icon(androidx.compose.material.icons.Icons.Default.Star, contentDescription = null, modifier = Modifier.size(18.dp))
                         Spacer(modifier = Modifier.width(8.dp))
-                        Text("Record Free Basic Electricity claim (${uiState.availableFreeKwh.toInt()} kWh) on $fbeDateLabel", textAlign = TextAlign.Center)
+                        Text("Record Free Basic Electricity claim (${uiState.availableFreeKwh.toInt()} kWh)...", textAlign = TextAlign.Center)
                     }
                     Spacer(modifier = Modifier.height(16.dp))
                 }
@@ -462,8 +461,7 @@ fun CalculationScreen(
                             SmartWarningsSection(uiState.smartWarnings)
                             
                             val canRecord = (uiState.result?.result?.totalCostCents ?: -1.0) >= 0 && (uiState.result?.result?.totalKwh ?: 0.0) > 0
-                            val recordDateLabel = recordDate.format(DateTimeFormatter.ofPattern("d MMM"))
-                            val recordButtonText = if (isCurrentMonth) "Record Purchase on $recordDateLabel" else "Record Historical Purchase on $recordDateLabel"
+                            val recordButtonText = if (isCurrentMonth) "Record Purchase..." else "Record Historical Purchase..."
                             Spacer(modifier = Modifier.height(12.dp))
                             Button(
                                 onClick = { showRecordDatePicker = true }, 
