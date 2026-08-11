@@ -18,6 +18,9 @@ import androidx.compose.ui.unit.dp
 import za.co.statecapture.android.util.AppConstants
 import za.co.statecapture.android.ui.components.SearchableProviderDialog
 import android.graphics.Color as AndroidColor
+import java.time.format.DateTimeFormatter
+import java.time.Instant
+import java.time.ZoneId
 import za.co.statecapture.android.domain.model.TariffProvider
 import androidx.compose.foundation.BorderStroke
 import za.co.statecapture.android.ui.calculator.CalculationViewModel
@@ -102,16 +105,28 @@ fun TariffInfoScreen(
             val indexLastUpdated = prefs.getString(AppConstants.KEY_INDEX_LAST_UPDATED, null)
             val downloadTimestamp = prefs.getLong(AppConstants.KEY_INDEX_DOWNLOAD_TIME, 0L)
             val formattedDownload = if (downloadTimestamp > 0) {
-                java.time.format.DateTimeFormatter.ofPattern("dd MMM yyyy HH:mm")
-                    .withZone(java.time.ZoneId.systemDefault())
-                    .format(java.time.Instant.ofEpochMilli(downloadTimestamp))
+                DateTimeFormatter.ofPattern("dd MMM yyyy HH:mm")
+                    .withZone(ZoneId.systemDefault())
+                    .format(Instant.ofEpochMilli(downloadTimestamp))
             } else null
+            
+            val formattedIndexUpdated = indexLastUpdated?.let {
+                try {
+                    val instant = Instant.parse(it)
+                    DateTimeFormatter.ofPattern("dd MMM yyyy HH:mm")
+                        .withZone(ZoneId.systemDefault())
+                        .format(instant)
+                } catch (e: Exception) {
+                    it
+                }
+            }
+
             Column(modifier = Modifier.padding(top = 8.dp)) {
-                if (indexLastUpdated != null) {
-                    Text(text = "Index last updated: $indexLastUpdated", style = MaterialTheme.typography.labelSmall)
+                if (formattedIndexUpdated != null) {
+                    Text(text = "Tariffs last updated on $formattedIndexUpdated", style = MaterialTheme.typography.labelSmall)
                 }
                 if (formattedDownload != null) {
-                    Text(text = "Downloaded at: $formattedDownload", style = MaterialTheme.typography.labelSmall)
+                    Text(text = "Tariffs last downloaded: $formattedDownload", style = MaterialTheme.typography.labelSmall)
                 }
             }
 
@@ -252,26 +267,31 @@ fun TariffDetailCard(
                 )
             }
             
-            if (period.fixedMonthlyChargeCents > 0) {
-                Spacer(modifier = Modifier.height(8.dp))
-                Text(
-                    text = "Fixed Monthly Charge: R${String.format("%.2f", period.fixedMonthlyChargeCents / 100.0)}",
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.error,
-                    fontWeight = FontWeight.Bold
-                )
-            }
-
             Spacer(modifier = Modifier.height(16.dp))
             HorizontalDivider(
                 modifier = Modifier.padding(vertical = 8.dp),
                 color = accentColor.copy(alpha = 0.2f)
             )
             Text(
-                text = "Block Rates (Excl. VAT):", 
+                text = "Rates (excl. VAT):", 
                 style = MaterialTheme.typography.labelMedium,
                 color = accentColor
             )
+            
+            if (period.fixedMonthlyChargeCents > 0) {
+                Row(
+                    modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp),
+                    horizontalArrangement = Arrangement.SpaceBetween
+                ) {
+                    Text("Fixed Monthly Charge", style = MaterialTheme.typography.bodyMedium)
+                    Text(
+                        "R${String.format(java.util.Locale.US, "%.2f", period.fixedMonthlyChargeCents / 100.0)}",
+                        style = MaterialTheme.typography.bodyLarge,
+                        fontWeight = FontWeight.Bold,
+                        color = accentColor
+                    )
+                }
+            }
             
             period.blocks.forEachIndexed { index, block ->
                 Row(
