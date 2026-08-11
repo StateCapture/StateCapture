@@ -260,6 +260,23 @@ fun CalculationScreen(
                                 }
                             }
                             Spacer(modifier = Modifier.height(6.dp))
+                            if (uiState.fixedMonthlyChargeCents > 0) {
+                                val fixedChargeAlreadyPaid = uiState.monthlyCumulativeKwh > 0
+                                val coveredCents = if (fixedChargeAlreadyPaid) {
+                                    uiState.fixedMonthlyChargeCents.toDouble()
+                                } else {
+                                    uiState.result?.result?.let { res ->
+                                        kotlin.math.min(res.totalCostCents, uiState.fixedMonthlyChargeCents.toDouble())
+                                    } ?: 0.0
+                                }
+
+                                FixedMonthlyChargeBar(
+                                    chargeCents = uiState.fixedMonthlyChargeCents,
+                                    coveredCents = coveredCents,
+                                    includeVat = uiState.includeVat
+                                )
+                                Spacer(modifier = Modifier.height(8.dp))
+                            }
                             IbtProgressBar(
                                 blocks = blocks,
                                 breakdown = uiState.cumulativeBreakdown,
