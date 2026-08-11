@@ -37,18 +37,23 @@ import androidx.compose.material.icons.filled.KeyboardArrowUp
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.DateRange
-import androidx.compose.material.icons.filled.Menu
 import androidx.compose.material.icons.filled.Lock
 import androidx.compose.material.icons.filled.Star
 import androidx.compose.material.icons.filled.Warning
 import androidx.compose.material.icons.filled.Info
 import java.text.DecimalFormat
+import kotlin.math.roundToInt
+import java.time.LocalDate
+import java.time.Instant
+import java.time.ZoneId
 import java.time.YearMonth
 import java.time.format.DateTimeFormatter
-import android.graphics.Color as AndroidColor
-import androidx.compose.ui.unit.IntOffset
-import androidx.compose.ui.unit.dp
-import kotlinx.coroutines.launch
+import java.text.SimpleDateFormat
+import java.util.Locale
+import java.util.Date
+import java.util.Calendar
+import za.co.statecapture.android.domain.engine.TariffCalculator
+import za.co.statecapture.android.domain.model.TariffProvider
 import za.co.statecapture.android.data.Purchase
 import za.co.statecapture.android.domain.engine.CalculationResult
 import za.co.statecapture.android.domain.engine.BlockYield
@@ -56,15 +61,15 @@ import za.co.statecapture.android.util.AppConstants
 import za.co.statecapture.android.ui.components.SearchableProviderDialog
 import za.co.statecapture.android.ui.theme.ProviderThemedBlock
 import za.co.statecapture.android.ui.theme.*
-import kotlin.math.roundToInt
-import java.text.SimpleDateFormat
-import java.util.Locale
-import java.util.Date
-import java.util.Calendar
 import android.app.DatePickerDialog
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.IntOffset
+import android.graphics.Color as AndroidColor
+import kotlinx.coroutines.launch
+import androidx.compose.material.icons.filled.Menu
 
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
@@ -88,6 +93,90 @@ fun CalculationScreen(
 
     val isCurrentMonth = uiState.selectedYearMonth == YearMonth.now()
     val monthLabel = uiState.selectedYearMonth.format(DateTimeFormatter.ofPattern("MMMM yyyy"))
+
+    var recordDate by remember(uiState.selectedYearMonth) {
+        mutableStateOf(if (isCurrentMonth) LocalDate.now() else uiState.selectedYearMonth.atDay(1))
+    }
+    var showRecordDatePicker by remember { mutableStateOf(false) }
+    var showFbeDatePicker by remember { mutableStateOf(false) }
+
+    var totalDragAmount by remember { mutableFloatStateOf(0f) }
+
+    if (showRecordDatePicker) {
+        val calendar = Calendar.getInstance().apply {
+            set(recordDate.year, recordDate.monthValue - 1, recordDate.dayOfMonth, 12, 0, 0)
+        }
+        val context = LocalContext.current
+        val datePickerDialog = DatePickerDialog(
+            context,
+            { _, year, month, day ->
+                val chosen = LocalDate.of(year, month + 1, day)
+                recordDate = chosen
+                viewModel.savePurchase(chosen)
+                showRecordDatePicker = false
+            },
+            calendar.get(Calendar.YEAR),
+            calendar.get(Calendar.MONTH),
+            calendar.get(Calendar.DAY_OF_MONTH)
+        ).apply {
+            val minCal = Calendar.getInstance().apply {
+                set(uiState.selectedYearMonth.year, uiState.selectedYearMonth.monthValue - 1, 1, 0, 0, 0)
+            }
+            val maxCal = Calendar.getInstance().apply {
+                if (isCurrentMonth) {
+                    timeInMillis = System.currentTimeMillis()
+                } else {
+                    val lastDay = uiState.selectedYearMonth.atEndOfMonth().dayOfMonth
+                    set(uiState.selectedYearMonth.year, uiState.selectedYearMonth.monthValue - 1, lastDay, 23, 59, 59)
+                }
+            }
+            datePicker.minDate = minCal.timeInMillis
+            datePicker.maxDate = maxCal.timeInMillis
+            setOnDismissListener { showRecordDatePicker = false }
+        }
+        DisposableEffect(Unit) {
+            datePickerDialog.show()
+            onDispose { datePickerDialog.dismiss() }
+        }
+    }
+
+    if (showFbeDatePicker) {
+        val calendar = Calendar.getInstance().apply {
+            set(recordDate.year, recordDate.monthValue - 1, recordDate.dayOfMonth, 12, 0, 0)
+        }
+        val context = LocalContext.current
+        val datePickerDialog = DatePickerDialog(
+            context,
+            { _, year, month, day ->
+                val chosen = LocalDate.of(year, month + 1, day)
+                recordDate = chosen
+                viewModel.claimFreeBlock(chosen)
+                showFbeDatePicker = false
+            },
+            calendar.get(Calendar.YEAR),
+            calendar.get(Calendar.MONTH),
+            calendar.get(Calendar.DAY_OF_MONTH)
+        ).apply {
+            val minCal = Calendar.getInstance().apply {
+                set(uiState.selectedYearMonth.year, uiState.selectedYearMonth.monthValue - 1, 1, 0, 0, 0)
+            }
+            val maxCal = Calendar.getInstance().apply {
+                if (isCurrentMonth) {
+                    timeInMillis = System.currentTimeMillis()
+                } else {
+                    val lastDay = uiState.selectedYearMonth.atEndOfMonth().dayOfMonth
+                    set(uiState.selectedYearMonth.year, uiState.selectedYearMonth.monthValue - 1, lastDay, 23, 59, 59)
+                }
+            }
+            datePicker.minDate = minCal.timeInMillis
+            datePicker.maxDate = maxCal.timeInMillis
+            setOnDismissListener { showFbeDatePicker = false }
+        }
+        DisposableEffect(Unit) {
+            datePickerDialog.show()
+            onDispose { datePickerDialog.dismiss() }
+        }
+    }
 
     Scaffold(
         topBar = {
@@ -119,6 +208,26 @@ fun CalculationScreen(
                 .padding(padding)
                 .padding(16.dp)
                 .fillMaxSize()
+                .then(
+                    if (uiState.selectedMeter != null) {
+                        Modifier.pointerInput(uiState.selectedYearMonth) {
+                            detectHorizontalDragGestures(
+                                onDragStart = { totalDragAmount = 0f },
+                                onDragEnd = {
+                                    if (totalDragAmount < -100f) {
+                                        viewModel.goToNextMonth()
+                                    } else if (totalDragAmount > 100f) {
+                                        viewModel.goToPreviousMonth()
+                                    }
+                                },
+                                onHorizontalDrag = { change, dragAmount ->
+                                    change.consume()
+                                    totalDragAmount += dragAmount
+                                }
+                            )
+                        }
+                    } else Modifier
+                )
                 .verticalScroll(rememberScrollState())
         ) {
             // ── Month navigation (meter mode only) ──────────────────────────
@@ -290,104 +399,79 @@ fun CalculationScreen(
             }
 
             if (uiState.selectedMeter != null) {
-                if (isCurrentMonth) {
-                    if (uiState.availableFreeKwh > 0) {
-                        Button(
-                            onClick = { viewModel.claimFreeBlock() },
-                            modifier = Modifier.fillMaxWidth(),
-                            colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.tertiary)
-                        ) {
-                            Icon(androidx.compose.material.icons.Icons.Default.Star, contentDescription = null, modifier = Modifier.size(18.dp))
-                            Spacer(modifier = Modifier.width(8.dp))
-                            Text("Record that I already claimed Free Basic Electricity (${uiState.availableFreeKwh.toInt()} kWh)", textAlign = TextAlign.Center)
-                        }
-                        Spacer(modifier = Modifier.height(16.dp))
-                    } else {
-                        // Amount input (placed immediately below top card / visualization)
-                        OutlinedTextField(
-                            value = uiState.inputAmount,
-                            onValueChange = { viewModel.onInputAmountChange(it) },
-                            label = { 
-                                val type = if (uiState.mode == CalculationMode.RandsToKwh) "Purchase Amount" else "Number of Units"
-                                val vatInfo = if (uiState.mode == CalculationMode.RandsToKwh) {
-                                    if (uiState.includeVat) " (incl. VAT)" else " (excl. VAT)"
-                                } else ""
-                                Text("$type$vatInfo")
-                            },
-                            prefix = { if (uiState.mode == CalculationMode.RandsToKwh) Text("R ") },
-                            suffix = { if (uiState.mode == CalculationMode.KwhToRands) Text(" kWh") },
-                            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-                            modifier = Modifier.fillMaxWidth(),
-                            singleLine = true
-                        )
-                        Spacer(modifier = Modifier.height(12.dp))
-
-                        // Mode selector
-                        SingleChoiceSegmentedButtonRow(modifier = Modifier.fillMaxWidth()) {
-                            SegmentedButton(selected = uiState.mode == CalculationMode.RandsToKwh, onClick = { viewModel.onModeChange(CalculationMode.RandsToKwh) }, shape = SegmentedButtonDefaults.itemShape(0, 2)) { Text("Rands → Units") }
-                            SegmentedButton(selected = uiState.mode == CalculationMode.KwhToRands, onClick = { viewModel.onModeChange(CalculationMode.KwhToRands) }, shape = SegmentedButtonDefaults.itemShape(1, 2)) { Text("Units → Rands") }
-                        }
-                        Spacer(modifier = Modifier.height(12.dp))
-
-                        // Block Shortcuts ("Quick fill" pills)
-                        BlockShortcutsRow(
-                            uiState = uiState,
-                            onShortcutClick = { viewModel.onBlockShortcutClick(it) }
-                        )
-                        Spacer(modifier = Modifier.height(16.dp))
-        
-                        // Result
-                        AnimatedContent(
-                            targetState = uiState.result,
-                            transitionSpec = { fadeIn() + slideInVertically() togetherWith fadeOut() },
-                            label = "ResultAnimation"
-                        ) { displayResult ->
-                            if (displayResult != null) {
-                                Column {
-                                    CalculationSummaryCard(
-                                        displayResult = displayResult
-                                    )
-                                    
-                                    // Smart Warnings
-                                    SmartWarningsSection(uiState.smartWarnings)
-                                    
-                                    // Only allow recording in the current month
-                                    val canRecord = (uiState.result?.result?.totalCostCents ?: -1.0) >= 0 && (uiState.result?.result?.totalKwh ?: 0.0) > 0
-                                    Spacer(modifier = Modifier.height(12.dp))
-                                    Button(
-                                        onClick = { viewModel.savePurchase() }, 
-                                        modifier = Modifier.fillMaxWidth(),
-                                        enabled = canRecord
-                                    ) {
-                                        Text("Record this Purchase")
-                                    }
-                                }
-                            }
-                        }
-                    }
-                } else {
-                    // Message for past months
-                    Card(
+                if (uiState.availableFreeKwh > 0) {
+                    val fbeDateLabel = recordDate.format(DateTimeFormatter.ofPattern("d MMM"))
+                    Button(
+                        onClick = { showFbeDatePicker = true },
                         modifier = Modifier.fillMaxWidth(),
-                        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f))
+                        colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.tertiary)
                     ) {
-                        Row(
-                            modifier = Modifier.padding(16.dp),
-                            verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.Center
-                        ) {
-                            Icon(
-                                Icons.Default.Lock, 
-                                contentDescription = null, 
-                                tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f),
-                                modifier = Modifier.size(16.dp)
+                        Icon(androidx.compose.material.icons.Icons.Default.Star, contentDescription = null, modifier = Modifier.size(18.dp))
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Text("Record Free Basic Electricity claim (${uiState.availableFreeKwh.toInt()} kWh) on $fbeDateLabel", textAlign = TextAlign.Center)
+                    }
+                    Spacer(modifier = Modifier.height(16.dp))
+                }
+
+                // Amount input (placed immediately below top card / visualization)
+                OutlinedTextField(
+                    value = uiState.inputAmount,
+                    onValueChange = { viewModel.onInputAmountChange(it) },
+                    label = { 
+                        val type = if (uiState.mode == CalculationMode.RandsToKwh) "Purchase Amount" else "Number of Units"
+                        val vatInfo = if (uiState.mode == CalculationMode.RandsToKwh) {
+                            if (uiState.includeVat) " (incl. VAT)" else " (excl. VAT)"
+                        } else ""
+                        Text("$type$vatInfo")
+                    },
+                    prefix = { if (uiState.mode == CalculationMode.RandsToKwh) Text("R ") },
+                    suffix = { if (uiState.mode == CalculationMode.KwhToRands) Text(" kWh") },
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                    modifier = Modifier.fillMaxWidth(),
+                    singleLine = true
+                )
+                Spacer(modifier = Modifier.height(12.dp))
+
+                // Mode selector
+                SingleChoiceSegmentedButtonRow(modifier = Modifier.fillMaxWidth()) {
+                    SegmentedButton(selected = uiState.mode == CalculationMode.RandsToKwh, onClick = { viewModel.onModeChange(CalculationMode.RandsToKwh) }, shape = SegmentedButtonDefaults.itemShape(0, 2)) { Text("Rands → Units") }
+                    SegmentedButton(selected = uiState.mode == CalculationMode.KwhToRands, onClick = { viewModel.onModeChange(CalculationMode.KwhToRands) }, shape = SegmentedButtonDefaults.itemShape(1, 2)) { Text("Units → Rands") }
+                }
+                Spacer(modifier = Modifier.height(12.dp))
+
+                // Block Shortcuts ("Quick fill" pills)
+                BlockShortcutsRow(
+                    uiState = uiState,
+                    onShortcutClick = { viewModel.onBlockShortcutClick(it) }
+                )
+                Spacer(modifier = Modifier.height(16.dp))
+
+                // Result
+                AnimatedContent(
+                    targetState = uiState.result,
+                    transitionSpec = { fadeIn() + slideInVertically() togetherWith fadeOut() },
+                    label = "ResultAnimation"
+                ) { displayResult ->
+                    if (displayResult != null) {
+                        Column {
+                            CalculationSummaryCard(
+                                displayResult = displayResult
                             )
-                            Spacer(Modifier.width(8.dp))
-                            Text(
-                                "Recording disabled for past months",
-                                style = MaterialTheme.typography.bodyMedium,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant
-                            )
+                            
+                            // Smart Warnings
+                            SmartWarningsSection(uiState.smartWarnings)
+                            
+                            val canRecord = (uiState.result?.result?.totalCostCents ?: -1.0) >= 0 && (uiState.result?.result?.totalKwh ?: 0.0) > 0
+                            val recordDateLabel = recordDate.format(DateTimeFormatter.ofPattern("d MMM"))
+                            val recordButtonText = if (isCurrentMonth) "Record Purchase on $recordDateLabel" else "Record Historical Purchase on $recordDateLabel"
+                            Spacer(modifier = Modifier.height(12.dp))
+                            Button(
+                                onClick = { showRecordDatePicker = true }, 
+                                modifier = Modifier.fillMaxWidth(),
+                                enabled = canRecord
+                            ) {
+                                Text(recordButtonText)
+                            }
                         }
                     }
                 }
@@ -438,6 +522,7 @@ fun CalculationScreen(
     if (editingPurchase != null) {
         EditPurchaseDialog(
             purchase = editingPurchase!!,
+            provider = uiState.selectedProvider,
             includeVat = uiState.includeVat,
             onDismiss = { editingPurchase = null },
             onConfirm = { updated ->
@@ -664,8 +749,9 @@ fun BlockShortcutsRow(
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
- fun EditPurchaseDialog(
+fun EditPurchaseDialog(
     purchase: Purchase,
+    provider: TariffProvider?,
     includeVat: Boolean,
     onDismiss: () -> Unit,
     onConfirm: (Purchase) -> Unit
@@ -673,15 +759,16 @@ fun BlockShortcutsRow(
     val vatMultiplier = AppConstants.VAT_MULTIPLIER
     val vatRate = AppConstants.VAT_RATE
     val context = LocalContext.current
+    val calculator = remember { TariffCalculator() }
 
     // Display state for the VAT toggle inside the dialog
     var dialogIncludeVat by remember { mutableStateOf(includeVat) }
+
+    // Linked / Auto-sync toggle
+    var isLinked by remember { mutableStateOf(true) }
     
     // The underlying "true" VAT-exclusive amount (in cents) we are editing
     var currentExclCents by remember { mutableStateOf(purchase.amountCents) }
-    
-    // Effective base rate (cents per kWh, excl VAT) derived from the original purchase
-    val effectiveRateCents = if (purchase.kwhYield > 0) purchase.amountCents / purchase.kwhYield else 0.0
 
     // UI state for the text fields
     val displayAmount = if (dialogIncludeVat) (currentExclCents * vatMultiplier) / 100.0 else currentExclCents / 100.0
@@ -689,10 +776,14 @@ fun BlockShortcutsRow(
     var kwhText    by remember { mutableStateOf(String.format(Locale.US, "%.2f", purchase.kwhYield)) }
     var selectedTimestamp by remember { mutableStateOf(purchase.timestamp) }
 
+    val purchaseDate = remember(selectedTimestamp) {
+        Instant.ofEpochMilli(selectedTimestamp).atZone(ZoneId.systemDefault()).toLocalDate()
+    }
+
     // Synchronize amountText when toggle changes
     LaunchedEffect(dialogIncludeVat) {
         val newDisplay = if (dialogIncludeVat) (currentExclCents * vatMultiplier) / 100.0 else currentExclCents / 100.0
-        amountText = String.format("%.2f", newDisplay)
+        amountText = String.format(Locale.US, "%.2f", newDisplay)
     }
 
     // Recalculate everything when amount changes
@@ -701,9 +792,11 @@ fun BlockShortcutsRow(
         val amountVal = input.toDoubleOrNull() ?: return
         currentExclCents = if (dialogIncludeVat) (amountVal * 100.0) / vatMultiplier else amountVal * 100.0
         
-        if (effectiveRateCents > 0) {
-            val kwh = currentExclCents / effectiveRateCents
-            kwhText = String.format(Locale.US, "%.2f", kwh)
+        if (isLinked && provider != null) {
+            val result = calculator.calculateYield(provider, currentExclCents, 0.0, purchaseDate)
+            if (result.totalKwh > 0) {
+                kwhText = String.format(Locale.US, "%.2f", result.totalKwh)
+            }
         }
     }
 
@@ -711,9 +804,12 @@ fun BlockShortcutsRow(
     fun onKwhInput(input: String) {
         kwhText = input
         val kwhVal = input.toDoubleOrNull() ?: return
-        currentExclCents = kwhVal * effectiveRateCents
-        val newDisplay = if (dialogIncludeVat) (currentExclCents * vatMultiplier) / 100.0 else currentExclCents / 100.0
-        amountText = String.format(Locale.US, "%.2f", newDisplay)
+        if (isLinked && provider != null) {
+            val result = calculator.calculateCost(provider, kwhVal, 0.0, purchaseDate, includeFixedCharge = false)
+            currentExclCents = result.totalCostCents
+            val newDisplay = if (dialogIncludeVat) (currentExclCents * vatMultiplier) / 100.0 else currentExclCents / 100.0
+            amountText = String.format(Locale.US, "%.2f", newDisplay)
+        }
     }
 
     // Date picker dialog setup
@@ -777,6 +873,33 @@ fun BlockShortcutsRow(
                     modifier = Modifier.fillMaxWidth()
                 )
 
+                // Link / Auto-sync toggle
+                if (fieldsEnabled) {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Icon(
+                                Icons.Default.Lock,
+                                contentDescription = null,
+                                modifier = Modifier.size(16.dp).alpha(if (isLinked) 1f else 0.4f),
+                                tint = if (isLinked) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.outline
+                            )
+                            Spacer(Modifier.width(6.dp))
+                            Text(
+                                if (isLinked) "Auto-sync units & amount" else "Manual mode (unlinked)",
+                                style = MaterialTheme.typography.labelMedium,
+                                color = if (isLinked) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.outline
+                            )
+                        }
+                        TextButton(onClick = { isLinked = !isLinked }) {
+                            Text(if (isLinked) "Unlink" else "Link")
+                        }
+                    }
+                }
+
                 // kWh field
                 OutlinedTextField(
                     value = kwhText,
@@ -799,12 +922,6 @@ fun BlockShortcutsRow(
                     Spacer(Modifier.width(8.dp))
                     Text(displayDate)
                 }
-                
-                Text(
-                    "Note: Editing amount or units uses the original purchase's effective rate to keep them in sync.",
-                    style = MaterialTheme.typography.labelSmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f)
-                )
             }
         },
         confirmButton = {
