@@ -260,10 +260,28 @@ fun CalculationScreen(
                                 }
                             }
                             Spacer(modifier = Modifier.height(6.dp))
+                            if (uiState.fixedMonthlyChargeCents > 0) {
+                                val fixedChargeAlreadyPaid = uiState.monthlyCumulativeKwh > 0
+                                val coveredCents = if (fixedChargeAlreadyPaid) {
+                                    uiState.fixedMonthlyChargeCents.toDouble()
+                                } else {
+                                    uiState.result?.result?.let { res ->
+                                        kotlin.math.min(res.totalCostCents, uiState.fixedMonthlyChargeCents.toDouble())
+                                    } ?: 0.0
+                                }
+
+                                FixedMonthlyChargeBar(
+                                    chargeCents = uiState.fixedMonthlyChargeCents,
+                                    coveredCents = coveredCents,
+                                    includeVat = uiState.includeVat
+                                )
+                                Spacer(modifier = Modifier.height(8.dp))
+                            }
                             IbtProgressBar(
                                 blocks = blocks,
                                 breakdown = uiState.cumulativeBreakdown,
-                                pendingBreakdown = uiState.result?.result?.blockBreakdown
+                                pendingBreakdown = uiState.result?.result?.blockBreakdown,
+                                includeVat = uiState.includeVat
                             )
                         }
                     }
@@ -837,6 +855,7 @@ fun IbtProgressBar(
     blocks: List<TariffBlock>,
     breakdown: List<BlockYield>,
     pendingBreakdown: List<BlockYield>? = null,
+    includeVat: Boolean = false,
     modifier: Modifier = Modifier
 ) {
     if (blocks.isEmpty()) return
@@ -1026,12 +1045,13 @@ fun IbtProgressBar(
                         textAlign = TextAlign.Center
                     )
 
-                    val rateCents = block.ratePerKwhCents
+                    val baseRateCents = block.ratePerKwhCents
+                    val displayRateCents = if (includeVat) baseRateCents * AppConstants.VAT_MULTIPLIER else baseRateCents
                     Text(
-                        text = if (rateCents == 0.0) "Free" else "R${String.format(Locale.US, "%.2f", rateCents / 100.0)}",
+                        text = if (baseRateCents == 0.0) "Free" else "R${String.format(Locale.US, "%.2f", displayRateCents / 100.0)}",
                         style = MaterialTheme.typography.labelSmall,
                         color = blockColor.copy(alpha = 0.85f),
-                        fontWeight = if (rateCents == 0.0) FontWeight.Bold else FontWeight.Normal,
+                        fontWeight = if (baseRateCents == 0.0) FontWeight.Bold else FontWeight.Normal,
                         textAlign = TextAlign.Center
                     )
                 }

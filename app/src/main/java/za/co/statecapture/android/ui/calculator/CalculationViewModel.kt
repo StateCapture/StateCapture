@@ -65,10 +65,19 @@ class CalculationViewModel(
     fun setMeter(meter: Meter) {
         viewModelScope.launch {
             val provider = repository.getProvider(meter.providerId)
+            val activeFixedCharge = if (provider != null) {
+                val today = LocalDate.now()
+                provider.periods.find { p ->
+                    val from = LocalDate.parse(p.validFrom)
+                    val to = p.validTo?.let { LocalDate.parse(it) }
+                    (!today.isBefore(from)) && (to == null || !today.isAfter(to))
+                }?.fixedMonthlyChargeCents ?: provider.periods.lastOrNull()?.fixedMonthlyChargeCents ?: 0
+            } else 0
             _uiState.update {
                 it.copy(
                     selectedMeter = meter,
                     selectedProvider = provider,
+                    fixedMonthlyChargeCents = activeFixedCharge,
                     inputAmount = "",
                     selectedYearMonth = YearMonth.now()
                 )
@@ -132,7 +141,13 @@ class CalculationViewModel(
             try {
                 val provider = repository.getProvider(indexItem.id)
                 if (provider != null) {
-                    _uiState.update { it.copy(selectedProvider = provider) }
+                    val today = LocalDate.now()
+                    val activeFixedCharge = provider.periods.find { p ->
+                        val from = LocalDate.parse(p.validFrom)
+                        val to = p.validTo?.let { LocalDate.parse(it) }
+                        (!today.isBefore(from)) && (to == null || !today.isAfter(to))
+                    }?.fixedMonthlyChargeCents ?: provider.periods.lastOrNull()?.fixedMonthlyChargeCents ?: 0
+                    _uiState.update { it.copy(selectedProvider = provider, fixedMonthlyChargeCents = activeFixedCharge) }
                     if (_uiState.value.selectedMeter != null) {
                         updateMonthlyTotal()
                     } else {
@@ -149,6 +164,12 @@ class CalculationViewModel(
         // Called from the Tariffs screen's "Try it out" section via its own dedicated
         // CalculationViewModel instance (not shared with the Meter Calculator screen).
         // Reset cumulative state so calculations always start fresh at Block 1.
+        val today = LocalDate.now()
+        val activeFixedCharge = provider.periods.find { p ->
+            val from = java.time.LocalDate.parse(p.validFrom)
+            val to = p.validTo?.let { java.time.LocalDate.parse(it) }
+            (!today.isBefore(from)) && (to == null || !today.isAfter(to))
+        }?.fixedMonthlyChargeCents ?: provider.periods.lastOrNull()?.fixedMonthlyChargeCents ?: 0
         _uiState.update {
             it.copy(
                 selectedProvider = provider,
@@ -158,7 +179,8 @@ class CalculationViewModel(
                 monthlyCumulativeVatCents = 0.0,
                 cumulativeBreakdown = emptyList(),
                 result = null,
-                inputAmount = ""
+                inputAmount = "",
+                fixedMonthlyChargeCents = activeFixedCharge
             )
         }
     }
@@ -331,6 +353,9 @@ class CalculationViewModel(
                 return@launch
             }
 
+            // For the Tariffs screen (no meter) the fixed charge is always shown fresh.
+            // For the Meter screen, only include it on the first purchase of the month.
+            val fixedChargeAlreadyPaid = state.monthlyCumulativeKwh > 0
             val result = if (state.mode == CalculationMode.RandsToKwh) {
                 val baseInput = if (state.includeVat) {
                     (input * 100.0 / AppConstants.VAT_MULTIPLIER) / 100.0
@@ -346,7 +371,8 @@ class CalculationViewModel(
                 calculator.calculateCost(
                     provider = provider,
                     targetKwh = input,
-                    previousPurchasesKwh = state.monthlyCumulativeKwh
+                    previousPurchasesKwh = state.monthlyCumulativeKwh,
+                    includeFixedCharge = !fixedChargeAlreadyPaid
                 )
             }
 
@@ -463,5 +489,7 @@ data class CalculationUiState(
     val sortField: SortField = SortField.DATE,
     val sortDirection: SortDirection = SortDirection.DESC,
     val smartWarnings: List<SmartWarning> = emptyList(),
-    val availableFreeKwh: Double = 0.0
+    val availableFreeKwh: Double = 0.0,
+    // Fixed monthly charge for the selected provider's active period (0 if none)
+    val fixedMonthlyChargeCents: Int = 0
 )

@@ -158,7 +158,8 @@ class TariffCalculator {
         provider: TariffProvider,
         targetKwh: Double,
         previousPurchasesKwh: Double,
-        date: LocalDate = LocalDate.now()
+        date: LocalDate = LocalDate.now(),
+        includeFixedCharge: Boolean = true
     ): CalculationResult {
         val activePeriod = findActivePeriod(provider, date)
         if (activePeriod == null) {
@@ -169,9 +170,11 @@ class TariffCalculator {
         var currentKwhAccumulator = previousPurchasesKwh
         
         val breakdown = mutableListOf<BlockYield>()
-        var totalCostCents = activePeriod.fixedMonthlyChargeCents.toDouble()
-        if (previousPurchasesKwh > 0) {
-            totalCostCents = 0.0 // Only apply on first purchase
+        // Apply fixed charge only when requested and only on the first purchase of the month
+        var totalCostCents = if (includeFixedCharge && previousPurchasesKwh <= 0.0) {
+            activePeriod.fixedMonthlyChargeCents.toDouble()
+        } else {
+            0.0
         }
 
         for ((index, block) in activePeriod.blocks.withIndex()) {

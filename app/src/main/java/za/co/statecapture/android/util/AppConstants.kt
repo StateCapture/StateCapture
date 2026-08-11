@@ -51,4 +51,8 @@ object AppConstants {
     const val ADMOB_NATIVE_UNIT_ID = "ca-app-pub-5657991828045333/7279061111" // Unit: Support
 
     const val TARIFF_BASE_URL = "https://raw.githubusercontent.com/StateCapture/StateCapture/main/tariffs/"
+    // SharedPreferences constants for storing index timestamps
+    const val PREFS_NAME = "tariff_prefs"
+    const val KEY_INDEX_LAST_UPDATED = "index_last_updated"
+    const val KEY_INDEX_DOWNLOAD_TIME = "index_download_timestamp"
 }

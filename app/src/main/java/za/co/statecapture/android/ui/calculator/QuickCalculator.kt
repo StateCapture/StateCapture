@@ -1,5 +1,9 @@
 package za.co.statecapture.android.ui.calculator
 
+import androidx.compose.runtime.getValue
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.tween
+import androidx.compose.ui.draw.clip
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
@@ -97,10 +101,23 @@ fun QuickCalculatorContent(
                 color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.8f)
             )
             Spacer(modifier = Modifier.height(6.dp))
+            if (uiState.fixedMonthlyChargeCents > 0) {
+                val coveredCents = uiState.result?.result?.let { res ->
+                    minOf(res.totalCostCents, uiState.fixedMonthlyChargeCents.toDouble())
+                } ?: 0.0
+
+                FixedMonthlyChargeBar(
+                    chargeCents = uiState.fixedMonthlyChargeCents, 
+                    coveredCents = coveredCents,
+                    includeVat = uiState.includeVat
+                )
+                Spacer(modifier = Modifier.height(8.dp))
+            }
             IbtProgressBar(
                 blocks = blocks,
                 breakdown = emptyList(),
-                pendingBreakdown = uiState.result?.result?.blockBreakdown
+                pendingBreakdown = uiState.result?.result?.blockBreakdown,
+                includeVat = uiState.includeVat
             )
             Spacer(modifier = Modifier.height(16.dp))
         }
@@ -250,6 +267,61 @@ fun SmartWarningsSection(warnings: List<SmartWarning>) {
                     }
                 }
             }
+        }
+    }
+}
+
+@Composable
+fun FixedMonthlyChargeBar(chargeCents: Int, coveredCents: Double, includeVat: Boolean) {
+    val displayCharge = if (includeVat) (chargeCents * AppConstants.VAT_MULTIPLIER) / 100.0 else chargeCents / 100.0
+    val displayCovered = if (includeVat) (coveredCents * AppConstants.VAT_MULTIPLIER) / 100.0 else coveredCents / 100.0
+    val formattedCharge = "R${String.format(java.util.Locale.US, "%.2f", displayCharge)}"
+    val formattedCovered = "R${String.format(java.util.Locale.US, "%.2f", displayCovered)}"
+    
+    val fillFraction = (coveredCents / chargeCents).coerceIn(0.0, 1.0).toFloat()
+    val animatedFillFraction by animateFloatAsState(
+        targetValue = fillFraction,
+        animationSpec = tween(durationMillis = 600),
+        label = "fixed_charge_fill"
+    )
+    
+    Box(
+        modifier = Modifier
+            .fillMaxWidth()
+            .height(24.dp)
+            .clip(RoundedCornerShape(4.dp))
+            .background(MaterialTheme.colorScheme.surfaceVariant),
+        contentAlignment = Alignment.Center
+    ) {
+        if (animatedFillFraction > 0f) {
+            Box(
+                modifier = Modifier
+                    .fillMaxHeight()
+                    .fillMaxWidth(animatedFillFraction)
+                    .align(Alignment.CenterStart)
+                    .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.35f))
+            )
+        }
+        
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            Icon(
+                Icons.Default.Info, 
+                contentDescription = null, 
+                modifier = Modifier.size(12.dp), 
+                tint = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+            Spacer(modifier = Modifier.width(4.dp))
+            val text = if (fillFraction > 0) {
+                "Fixed Monthly Charge: $formattedCovered / $formattedCharge"
+            } else {
+                "Fixed Monthly Charge: $formattedCharge"
+            }
+            Text(
+                text,
+                style = MaterialTheme.typography.labelSmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                fontWeight = FontWeight.Bold
+            )
         }
     }
 }

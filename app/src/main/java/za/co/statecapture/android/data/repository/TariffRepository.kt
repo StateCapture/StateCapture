@@ -18,7 +18,7 @@ import za.co.statecapture.android.util.AppConstants
 import java.time.LocalDate
 
 class TariffRepository(private val context: Context) {
-    
+
     private val json = Json { ignoreUnknownKeys = true }
     private val database = AppDatabase.getDatabase(context)
     private val tariffDao = database.tariffDao()
@@ -47,89 +47,147 @@ class TariffRepository(private val context: Context) {
                 )
             }
             tariffDao.upsertIndex(entities)
+            // Delete any provider rows that are no longer present in the index
+            val currentIds = response.plans.map { it.id }
+            tariffDao.deleteProvidersNotIn(currentIds)
+            // Clear cached providers – the index may have changed (new files/validity periods)
+            providerCache.clear()
+            // Store index timestamps for debugging and UI display
+            try {
+                val prefs = context.getSharedPreferences(AppConstants.PREFS_NAME, Context.MODE_PRIVATE)
+                // Assuming the API response contains a field 'lastUpdated' matching the JSON 'last_updated'
+                val lastUpdated = response.lastUpdated?.toString() ?: ""
+                prefs.edit()
+                    .putString(AppConstants.KEY_INDEX_LAST_UPDATED, lastUpdated)
+                    .putLong(AppConstants.KEY_INDEX_DOWNLOAD_TIME, System.currentTimeMillis())
+                    .apply()
+            } catch (e: Exception) {
+                Log.e("TariffRepository", "Failed to store index timestamps", e)
+            }
         } catch (e: Exception) {
             Log.e("TariffRepository", "Failed to load index from network", e)
             // It's okay if we fail, we'll just rely on the DB cache
         }
     }
 
-    suspend fun getAllProviders(): List<TariffIndexItem> = withContext(Dispatchers.IO) {
-        val entities = tariffDao.getIndex()
-        if (entities.isEmpty()) {
-            ensureIndexLoaded()
-            return@withContext tariffDao.getIndex().map { it.toDomain() }
-        }
-        entities.map { it.toDomain() }
-    }
+    suspend fun getAllProviders(): List<TariffIndexItem> = getProvidersForCurrentFY()
 
-    suspend fun getProvider(id: String, date: LocalDate = LocalDate.now()): TariffProvider? = withContext(Dispatchers.IO) {
-        // Look up the required file path from the index
-        val indexItem = tariffDao.getIndexItem(id) ?: return@withContext null
-        
-        // Find the file that covers the requested date
-        val fileEntry = indexItem.files.find { file ->
-            val validFrom = LocalDate.parse(file.validFrom)
-            val validTo = file.validTo?.let { LocalDate.parse(it) }
-            
-            (date.isEqual(validFrom) || date.isAfter(validFrom)) &&
-            (validTo == null || date.isEqual(validTo) || date.isBefore(validTo))
-        } ?: indexItem.files.lastOrNull() // fallback to the latest known file if date is in the far future
 
-        // Check cache / DB
-        var entity = tariffDao.getProviderById(id)
-        
-        // If we found a specific file for this date, check if our local entity already has a period covering the date
-        var hasPeriodForDate = false
-        if (entity != null) {
-            hasPeriodForDate = entity.periods.any { period ->
-                val validFrom = LocalDate.parse(period.validFrom)
-                val validTo = period.validTo?.let { LocalDate.parse(it) }
-                (date.isEqual(validFrom) || date.isAfter(validFrom)) &&
-                (validTo == null || date.isEqual(validTo) || date.isBefore(validTo))
-            }
-        }
-
-        if (!hasPeriodForDate && fileEntry != null) {
-            try {
-                // Download specific file
-                val fileData = api.getProviderFile(fileEntry.path)
-                val downloadedTariff = fileData.tariffs.find { it.id == id }
-                
-                if (downloadedTariff != null) {
-                    val officialUrl = fileData.officialUrl
-                    
-                    if (entity == null) {
-                        entity = TariffProviderEntity(
-                            id = downloadedTariff.id,
-                            name = downloadedTariff.name,
-                            type = downloadedTariff.type,
-                            color = downloadedTariff.color,
-                            officialUrl = officialUrl,
-                            periods = downloadedTariff.periods
-                        )
-                    } else {
-                        // Merge periods: keep existing, add new ones (prevent exact duplicates by validFrom)
-                        val existingFromDates = entity.periods.map { it.validFrom }.toSet()
-                        val newPeriods = downloadedTariff.periods.filter { it.validFrom !in existingFromDates }
-                        entity = entity.copy(
-                            officialUrl = officialUrl ?: entity.officialUrl,
-                            periods = (entity.periods + newPeriods).sortedBy { it.validFrom }
-                        )
+    /**
+     * Returns providers that have tariff data valid for the current financial year.
+     * This filters index entries whose file validity period includes today's date.
+     */
+    suspend fun getProvidersForCurrentFY(): List<TariffIndexItem> = withContext(Dispatchers.IO) {
+        // Ensure we have the latest index
+        ensureIndexLoaded()
+        val today = LocalDate.now()
+        tariffDao.getIndex()
+            .filter { indexItem ->
+                // Determine financial year start based on provider type
+                val fyStart = getFinancialYearStart(indexItem.type, today)
+                if (today.isBefore(fyStart)) {
+                    false
+                } else {
+                    indexItem.files.any { file ->
+                        val validFrom = LocalDate.parse(file.validFrom)
+                        val validTo = file.validTo?.let { LocalDate.parse(it) }
+                        (today.isEqual(validFrom) || today.isAfter(validFrom)) &&
+                                (validTo == null || today.isEqual(validTo) || today.isBefore(validTo))
                     }
-                    tariffDao.insertAll(listOf(entity))
-                    providerCache[id] = entity.toDomain()
                 }
-            } catch (e: Exception) {
-                Log.e("TariffRepository", "Failed to load provider file: ${fileEntry.path}", e)
+            }
+
+            .map { it.toDomain() }
+    }
+
+
+
+
+    suspend fun getProvider(id: String, date: LocalDate = LocalDate.now()): TariffProvider? =
+        withContext(Dispatchers.IO) {
+            // Look up the required file path from the index
+            var indexItem = tariffDao.getIndexItem(id)
+            var effectiveId = id
+            if (indexItem == null) {
+                // Attempt to find a newer sub‑provider sharing the same base prefix
+                val base = id.substringBeforeLast("_")
+                val candidates = tariffDao.getIndex()
+                    .filter { it.id.startsWith(base) }
+                    .sortedByDescending { it.files.maxByOrNull { f -> f.validFrom }?.validFrom }
+                if (candidates.isNotEmpty()) {
+                    indexItem = candidates.first()
+                    effectiveId = indexItem.id
+                } else {
+                    return@withContext null
+                }
+            }
+
+            // Find the file that covers the requested date
+            val fileEntry = indexItem.files.find { file ->
+                val validFrom = LocalDate.parse(file.validFrom)
+                val validTo = file.validTo?.let { LocalDate.parse(it) }
+
+                (date.isEqual(validFrom) || date.isAfter(validFrom)) &&
+                        (validTo == null || date.isEqual(validTo) || date.isBefore(validTo))
+            } ?: indexItem.files.lastOrNull() // fallback to the latest known file if date is in the far future
+
+            // Check cache / DB
+            var entity = tariffDao.getProviderById(effectiveId)
+
+            // If we found a specific file for this date, check if our local entity already has a period covering the date
+            var hasPeriodForDate = false
+            if (entity != null) {
+                hasPeriodForDate = entity.periods.any { period ->
+                    val validFrom = LocalDate.parse(period.validFrom)
+                    val validTo = period.validTo?.let { LocalDate.parse(it) }
+                    (date.isEqual(validFrom) || date.isAfter(validFrom)) &&
+                            (validTo == null || date.isEqual(validTo) || date.isBefore(validTo))
+                }
+            }
+
+            if (!hasPeriodForDate && fileEntry != null) {
+                try {
+                    // Download specific file
+                    val fileData = api.getProviderFile(fileEntry.path)
+                    val downloadedTariff = fileData.tariffs.find { it.id == id }
+
+                    if (downloadedTariff != null) {
+                        val officialUrl = fileData.officialUrl
+
+                        if (entity == null) {
+                            entity = TariffProviderEntity(
+                                id = downloadedTariff.id,
+                                name = downloadedTariff.name,
+                                type = downloadedTariff.type,
+                                color = downloadedTariff.color,
+                                officialUrl = officialUrl,
+                                periods = downloadedTariff.periods
+                            )
+                        } else {
+                            // Merge periods: keep existing, add new ones (prevent exact duplicates by validFrom)
+                            val existingFromDates = entity.periods.map { it.validFrom }.toSet()
+                            val newPeriods = downloadedTariff.periods.filter { it.validFrom !in existingFromDates }
+                            entity = entity.copy(
+                                officialUrl = officialUrl ?: entity.officialUrl,
+                                periods = (entity.periods + newPeriods).sortedBy { it.validFrom }
+                            )
+                        }
+                        tariffDao.insertAll(listOf(entity))
+                        providerCache[id] = entity.toDomain()
+                    }
+                } catch (e: Exception) {
+                    Log.e("TariffRepository", "Failed to load provider file: ${fileEntry.path}", e)
+                }
+            }
+
+            // Return from cache or DB
+            providerCache[effectiveId]?.let { return@withContext it }
+            entity?.toDomain()?.also {
+                // Cache under both the effective id and the original request id for future lookups
+                providerCache[effectiveId] = it
+                if (effectiveId != id) providerCache[id] = it
             }
         }
-
-        // Return from cache or DB
-        providerCache[id]?.let { return@withContext it }
-        entity?.toDomain()?.also {
-            providerCache[id] = it
-        }
-    }
 
     private fun TariffIndexEntity.toDomain() = TariffIndexItem(
         id = id,
@@ -148,4 +206,17 @@ class TariffRepository(private val context: Context) {
         officialUrl = officialUrl,
         periods = periods
     )
+
+    // Helper to determine financial year start based on provider type
+    private fun getFinancialYearStart(providerType: String, referenceDate: LocalDate): LocalDate {
+        return if (providerType == "provider") {
+            // Eskom or provider types start fiscal year on 1 April
+            val year = if (referenceDate.monthValue >= 4) referenceDate.year else referenceDate.year - 1
+            LocalDate.of(year, 4, 1)
+        } else {
+            // Municipalities start fiscal year on 1 July
+            val year = if (referenceDate.monthValue >= 7) referenceDate.year else referenceDate.year - 1
+            LocalDate.of(year, 7, 1)
+        }
+    }
 }
