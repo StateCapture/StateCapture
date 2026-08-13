@@ -42,6 +42,9 @@ Below are some previews of the app's clean Material 3 design and features:
 * **📊 Step-Tariff Engine:**
   * Accounts for cumulative purchases in the current month to correctly calculate tier-based yield.
   * Displays a full breakdown of how your purchase is split across tariff blocks.
+* **📅 Historical Purchase & Custom Date Support:**
+  * Log purchases for prior dates/months with automatic tariff period matching.
+  * View detailed monthly meter breakdowns, past purchase history, and price jump indicators when stepping into higher tariff tiers.
 * **📅 Time-Based Tariffs:**
   * Resolves tariffs automatically using the purchase date (e.g. matching 2025/2026 or 2026/2027 billing periods).
 * **⚡ Multi-Meter Management:**
