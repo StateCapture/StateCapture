@@ -230,11 +230,17 @@ class CalculationViewModel(
         }
     }
 
-    fun savePurchase() {
+    fun savePurchase(date: LocalDate = LocalDate.now()) {
         val result = _uiState.value.result ?: return
         val meter = _uiState.value.selectedMeter ?: return
         
         if (result.result.totalCostCents < 0 || result.result.totalKwh <= 0) return
+
+        val timestamp = if (date == LocalDate.now()) {
+            System.currentTimeMillis()
+        } else {
+            date.atStartOfDay(ZoneId.systemDefault()).toInstant().toEpochMilli()
+        }
 
         viewModelScope.launch {
             purchaseDao.insert(
@@ -242,7 +248,8 @@ class CalculationViewModel(
                     meterId = meter.id,
                     amountCents = result.result.totalCostCents,
                     vatAmountCents = result.vatAmountCents,
-                    kwhYield = result.result.totalKwh
+                    kwhYield = result.result.totalKwh,
+                    timestamp = timestamp
                 )
             )
             _uiState.update { it.copy(inputAmount = "") }
@@ -250,19 +257,28 @@ class CalculationViewModel(
         }
     }
 
-    fun claimFreeBlock() {
+    fun claimFreeBlock(date: LocalDate = LocalDate.now()) {
         val meter = _uiState.value.selectedMeter ?: return
         val provider = _uiState.value.selectedProvider ?: return
+        val ym = _uiState.value.selectedYearMonth
+        val isCurrentMonth = ym == YearMonth.now()
+        val referenceDate = if (isCurrentMonth) date else ym.atEndOfMonth()
         
         viewModelScope.launch {
-            val result = calculator.calculateYield(provider, 0.0, _uiState.value.monthlyCumulativeKwh)
+            val result = calculator.calculateYield(provider, 0.0, _uiState.value.monthlyCumulativeKwh, referenceDate)
             if (result.totalKwh > 0) {
+                val timestamp = if (date == LocalDate.now()) {
+                    System.currentTimeMillis()
+                } else {
+                    date.atStartOfDay(ZoneId.systemDefault()).toInstant().toEpochMilli()
+                }
                 purchaseDao.insert(
                     Purchase(
                         meterId = meter.id,
                         amountCents = 0.0,
                         vatAmountCents = 0.0,
-                        kwhYield = result.totalKwh
+                        kwhYield = result.totalKwh,
+                        timestamp = timestamp
                     )
                 )
                 updateMonthlyTotal()
@@ -278,9 +294,9 @@ class CalculationViewModel(
         direction: SortDirection
     ): List<Purchase> {
         val comparator: Comparator<Purchase> = when (field) {
-            SortField.DATE   -> compareBy { it.timestamp }
-            SortField.AMOUNT -> compareBy { it.amountCents + it.vatAmountCents }
-            SortField.UNITS  -> compareBy { it.kwhYield }
+            SortField.DATE   -> compareBy<Purchase> { it.timestamp }.thenBy { it.id }
+            SortField.AMOUNT -> compareBy<Purchase> { it.amountCents + it.vatAmountCents }.thenBy { it.id }
+            SortField.UNITS  -> compareBy<Purchase> { it.kwhYield }.thenBy { it.id }
         }
         return if (direction == SortDirection.DESC) purchases.sortedWith(comparator.reversed())
         else purchases.sortedWith(comparator)
@@ -298,8 +314,6 @@ class CalculationViewModel(
             val startOfNextMonth = ym.plusMonths(1).atDay(1)
                 .atStartOfDay(ZoneId.systemDefault()).toInstant().toEpochMilli()
 
-            // For the current month: sum all kwh from start of month (open end).
-            // For past months: sum only within that calendar month's bounds.
             val isCurrentMonth = ym == YearMonth.now()
             val totalKwh = if (isCurrentMonth) {
                 purchaseDao.getMonthlyTotalKwh(meter.id, startOfMonth) ?: 0.0
@@ -307,11 +321,14 @@ class CalculationViewModel(
                 purchaseDao.getMonthlyTotalKwhBetween(meter.id, startOfMonth, startOfNextMonth) ?: 0.0
             }
 
-            // Use the last day of the selected month as the reference date so that
-            // calculateCumulativeBreakdown picks the tariff period that was actually
-            // active during that month, not today's (possibly newer) period.
             val referenceDate = if (isCurrentMonth) LocalDate.now() else ym.atEndOfMonth()
             val breakdown = calculator.calculateCumulativeBreakdown(provider, totalKwh, referenceDate)
+
+            val activeFixedCharge = provider.periods.find { p ->
+                val from = LocalDate.parse(p.validFrom)
+                val to = p.validTo?.let { LocalDate.parse(it) }
+                (!referenceDate.isBefore(from)) && (to == null || !referenceDate.isAfter(to))
+            }?.fixedMonthlyChargeCents ?: provider.periods.lastOrNull()?.fixedMonthlyChargeCents ?: 0
 
             val allHistory = purchaseDao.getPurchasesForMeter(meter.id).first()
 
@@ -322,8 +339,8 @@ class CalculationViewModel(
             val totalVatCents = monthHistory.sumOf { it.vatAmountCents }
             val sorted = sortPurchases(monthHistory, state.sortField, state.sortDirection)
 
-            val freeYieldResult = calculator.calculateYield(provider, 0.0, totalKwh)
-            val availableFreeKwh = if (isCurrentMonth) freeYieldResult.totalKwh else 0.0
+            val freeYieldResult = calculator.calculateYield(provider, 0.0, totalKwh, referenceDate)
+            val availableFreeKwh = freeYieldResult.totalKwh
 
             _uiState.update {
                 it.copy(
@@ -332,7 +349,8 @@ class CalculationViewModel(
                     monthlyCumulativeVatCents = totalVatCents,
                     cumulativeBreakdown = breakdown,
                     recentPurchases = sorted,
-                    availableFreeKwh = availableFreeKwh
+                    availableFreeKwh = availableFreeKwh,
+                    fixedMonthlyChargeCents = activeFixedCharge
                 )
             }
             calculateResult()
@@ -353,6 +371,9 @@ class CalculationViewModel(
                 return@launch
             }
 
+            val isCurrentMonth = state.selectedYearMonth == YearMonth.now()
+            val referenceDate = if (isCurrentMonth) LocalDate.now() else state.selectedYearMonth.atEndOfMonth()
+
             // For the Tariffs screen (no meter) the fixed charge is always shown fresh.
             // For the Meter screen, only include it on the first purchase of the month.
             val fixedChargeAlreadyPaid = state.monthlyCumulativeKwh > 0
@@ -365,13 +386,15 @@ class CalculationViewModel(
                 calculator.calculateYield(
                     provider = provider,
                     purchaseAmountCents = baseInput * 100.0,
-                    previousPurchasesKwh = state.monthlyCumulativeKwh
+                    previousPurchasesKwh = state.monthlyCumulativeKwh,
+                    date = referenceDate
                 )
             } else {
                 calculator.calculateCost(
                     provider = provider,
                     targetKwh = input,
                     previousPurchasesKwh = state.monthlyCumulativeKwh,
+                    date = referenceDate,
                     includeFixedCharge = !fixedChargeAlreadyPaid
                 )
             }
