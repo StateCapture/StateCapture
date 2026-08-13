@@ -17,6 +17,14 @@ Below are some previews of the app's clean Material 3 design and features:
 | :---: | :---: | :---: |
 | ![Dashboard](screenshots/dashboard.png) | ![Meter Management](screenshots/meters.png) | ![Tariff Calculator](screenshots/tariffs.png) |
 
+| **Monthly Meter Overview** | **Historical Purchases** | **Date Selection** |
+| :---: | :---: | :---: |
+| ![Monthly Meter](screenshots/monthly_meter.png) | ![Monthly Existing Data](screenshots/monthly_existing_data.png) | ![Monthly Meter Date](screenshots/monthly_meter_date.png) |
+
+| **Extra Purchase** | **Tier Price Jump** |
+| :---: | :---: |
+| ![Monthly Meter Extra Purchase](screenshots/monthly_meter_extra_purchase.png) | ![Monthly Meter Price Jump](screenshots/monthly_meter_price_jump.png) |
+
 | **Settings & Reminders** | **Feedback & Support** |
 | :---: | :---: |
 | ![Settings](screenshots/settings.png) | ![Feedback](screenshots/feedback.png) |
