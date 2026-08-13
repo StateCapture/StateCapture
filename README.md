@@ -42,6 +42,9 @@ Below are some previews of the app's clean Material 3 design and features:
 * **📊 Step-Tariff Engine:**
   * Accounts for cumulative purchases in the current month to correctly calculate tier-based yield.
   * Displays a full breakdown of how your purchase is split across tariff blocks.
+* **📅 Historical Purchase & Custom Date Support:**
+  * Log purchases for prior dates/months with automatic tariff period matching.
+  * View detailed monthly meter breakdowns, past purchase history, and price jump indicators when stepping into higher tariff tiers.
 * **📅 Time-Based Tariffs:**
   * Resolves tariffs automatically using the purchase date (e.g. matching 2025/2026 or 2026/2027 billing periods).
 * **⚡ Multi-Meter Management:**
@@ -61,8 +64,8 @@ Below are some previews of the app's clean Material 3 design and features:
 
 ## 🛠️ Technology Stack
 
-* **Language:** Kotlin 1.9.22
-* **UI Framework:** Jetpack Compose (using Material Design 3 guidelines)
+* **Language:** Kotlin 2.0.21
+* **UI Framework:** Jetpack Compose (using Material Design 3 guidelines & Compose Compiler 2.0)
 * **Architecture:** MVVM (Model-View-ViewModel) + Clean Architecture
 * **Database:** Room Database (via Kotlin Symbol Processing - KSP)
 * **Local Storage:** Jetpack DataStore Preferences (for settings and configuration)
@@ -81,28 +84,44 @@ app/src/main/java/za/co/statecapture/android/
 ├── data/
 │   ├── AppDatabase.kt         # Room Database configuration
 │   ├── Meter.kt               # Room Entity for meters
+│   ├── MeterDao.kt            # DAO for meters
 │   ├── Purchase.kt            # Room Entity for purchases
+│   ├── PurchaseDao.kt         # DAO for purchases
 │   ├── TariffConverters.kt    # Room type converters (for periods & blocks)
-│   ├── TariffDao.kt           # DAO for cached tariff providers
+│   ├── TariffDao.kt           # DAO for cached tariff index & providers
+│   ├── TariffIndexEntity.kt   # Room Entity for tariff index caching
 │   ├── TariffProviderEntity.kt# Room Entity for tariff data caching
+│   ├── network/
+│   │   └── TariffApi.kt       # Retrofit service interface for fetching index & provider JSON files
 │   └── repository/
 │       ├── SettingsRepository.kt  # Reads/writes DataStore preferences
-│       └── TariffRepository.kt    # Loads local/remote JSON configurations
+│       └── TariffRepository.kt    # Synchronizes index.json, downloads yearly provider files (e.g. 2025/2026), and caches data
 ├── domain/
-│   └── model/                 # Domain representation of Tariff blocks and calculations
-├── notification/              # AlarmReceiver & Notification Workers for reminders
+│   ├── engine/                # Core calculation engine (TariffCalculator)
+│   └── model/                 # Domain models (TariffProvider, IndexResponse, TariffIndexItem, etc.)
+├── notification/              # ReminderWorker & NotificationScheduler for monthly reminders
 ├── ui/
 │   ├── AppViewModelFactory.kt # ViewModel Provider Factory
 │   ├── theme/                 # Material 3 Color Schemes & Typography
-│   └── [screens]/             # UI screens (Dashboard, Meters, Tariffs, Settings, Feedback, etc.)
-└── util/                      # Helpers (e.g., Flashlight manager)
+│   ├── components/            # Reusable UI elements (AdBanner, SupportAd, SearchableProviderDialog, etc.)
+│   └── [screens]/             # UI screens (dashboard, meters, tariffs, calculator, settings, feedback, support, about)
+└── util/                      # Helpers (e.g., Flashlight manager, ReorderableUtils)
 ```
 
 ---
 
-## 🗂️ Tariff Data JSON Schema
+## 🗂️ Tariff Data & Synchronization
 
-The app now uses a modular, downloadable tariff system hosted remotely. The root configuration is defined in an `index.json` file which points to individual tariff JSON files for each year and provider.
+The app uses a modular, multi-year tariff architecture hosted remotely. 
+
+1. **Remote Index (`index.json`)**:
+   - The app fetches `index.json` from the remote repository on launch or refresh.
+   - `index.json` acts as a manifest listing available tariff plans, valid date ranges, and relative path references to year-structured provider files (e.g., `2025/tshwane.json`, `2026/tshwane.json`).
+2. **On-Demand & Background Provider Download**:
+   - When a meter uses a specific provider/plan, the app downloads and caches the corresponding yearly JSON file for the required billing period (e.g. `2025/` or `2026/`).
+   - Cached provider entities are persisted in Room (`TariffProviderEntity` and `TariffIndexEntity`) for full offline access.
+3. **Multi-Year Support**:
+   - Allows calculating purchases across different financial years (e.g., 2024/2025 vs 2025/2026 vs 2026/2027 municipal tariffs) based on the purchase transaction date.
 
 ### `index.json` Schema
 ```json
@@ -116,6 +135,11 @@ The app now uses a modular, downloadable tariff system hosted remotely. The root
       "color": "#008751",
       "provider_id": "tshwane",
       "files": [
+        {
+          "valid_from": "2025-07-01",
+          "valid_to": "2026-06-30",
+          "path": "2025/tshwane.json"
+        },
         {
           "valid_from": "2026-07-01",
           "valid_to": "2027-06-30",
@@ -163,7 +187,7 @@ The app now uses a modular, downloadable tariff system hosted remotely. The root
 
 ### Prerequisites
 * JDK 17
-* Android SDK 35 (Platform tools, Build tools)
+* Android SDK 36 (Platform tools, Build tools)
 * Gradle 8.2+
 
 ### 1. Configure Signing Credentials
