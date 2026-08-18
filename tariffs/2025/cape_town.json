@@ -2,7 +2,37 @@
     "id": "cape_town",
     "name": "City of Cape Town",
     "official_url": "https://www.capetown.gov.za",
+    "document_link": "https://www.capetown.gov.za/_documents/resource.capetown.gov.za/documentcentre/Documents/Graphics%20and%20educational%20material/Budget2025-26-Electricity-tariffs-Overview-pamphlet.pdf",
     "tariffs": [
+        {
+            "id": "cape_town_domestic",
+            "name": "City of Cape Town - Domestic",
+            "type": "municipality",
+            "color": "#009FDF",
+            "periods": [
+                {
+                    "valid_from": "2025-07-01",
+                    "valid_to": "2026-06-30",
+                    "comments": [
+                        "Fixed monthly charge of R59.90 (excl. VAT) is recovered as a daily rate of R1.97 per day.",
+                        "Block 2 rate was reduced from R4.13 to R4.04 per unit (excl. VAT) from 1 July 2025."
+                    ],
+                    "fixed_monthly_charge_cents": 5990,
+                    "blocks": [
+                        {
+                            "min_kwh": 0,
+                            "max_kwh": 600,
+                            "rate_per_kwh_cents": 340.0
+                        },
+                        {
+                            "min_kwh": 601,
+                            "max_kwh": 999999,
+                            "rate_per_kwh_cents": 404.0
+                        }
+                    ]
+                }
+            ]
+        },
         {
             "id": "cape_town_home_user",
             "name": "City of Cape Town - Home User",

@@ -1,5 +1,5 @@
 {
-    "last_updated": "2026-08-05",
+    "last_updated": "2026-08-18",
     "plans": [
         {
             "id": "cape_town_domestic",
@@ -8,6 +8,11 @@
             "color": "#009FDF",
             "provider_id": "cape_town",
             "files": [
+                {
+                    "valid_from": "2025-07-01",
+                    "valid_to": "2026-06-30",
+                    "path": "2025/cape_town.json"
+                },
                 {
                     "valid_from": "2026-07-01",
                     "valid_to": "2027-06-30",

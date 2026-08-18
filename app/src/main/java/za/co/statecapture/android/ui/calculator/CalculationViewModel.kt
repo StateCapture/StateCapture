@@ -322,13 +322,23 @@ class CalculationViewModel(
             }
 
             val referenceDate = if (isCurrentMonth) LocalDate.now() else ym.atEndOfMonth()
-            val breakdown = calculator.calculateCumulativeBreakdown(provider, totalKwh, referenceDate)
 
-            val activeFixedCharge = provider.periods.find { p ->
+            // Ensure the provider has tariff periods for the reference date.
+            // For historical months from a previous financial year the repository will
+            // download the matching tariff file on demand and merge its periods into the
+            // locally-cached provider, giving us the correct block boundaries.
+            val effectiveProvider = repository.getProvider(meter.providerId, referenceDate) ?: provider
+            if (effectiveProvider !== provider) {
+                _uiState.update { it.copy(selectedProvider = effectiveProvider) }
+            }
+
+            val breakdown = calculator.calculateCumulativeBreakdown(effectiveProvider, totalKwh, referenceDate)
+
+            val activeFixedCharge = effectiveProvider.periods.find { p ->
                 val from = LocalDate.parse(p.validFrom)
                 val to = p.validTo?.let { LocalDate.parse(it) }
                 (!referenceDate.isBefore(from)) && (to == null || !referenceDate.isAfter(to))
-            }?.fixedMonthlyChargeCents ?: provider.periods.lastOrNull()?.fixedMonthlyChargeCents ?: 0
+            }?.fixedMonthlyChargeCents ?: effectiveProvider.periods.lastOrNull()?.fixedMonthlyChargeCents ?: 0
 
             val allHistory = purchaseDao.getPurchasesForMeter(meter.id).first()
 
@@ -339,7 +349,7 @@ class CalculationViewModel(
             val totalVatCents = monthHistory.sumOf { it.vatAmountCents }
             val sorted = sortPurchases(monthHistory, state.sortField, state.sortDirection)
 
-            val freeYieldResult = calculator.calculateYield(provider, 0.0, totalKwh, referenceDate)
+            val freeYieldResult = calculator.calculateYield(effectiveProvider, 0.0, totalKwh, referenceDate)
             val availableFreeKwh = freeYieldResult.totalKwh
 
             _uiState.update {
