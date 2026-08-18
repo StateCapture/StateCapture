@@ -3,41 +3,47 @@ package za.co.statecapture.android.ui.settings
 import android.content.Context
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import za.co.statecapture.android.data.repository.SettingsRepository
-import za.co.statecapture.android.data.repository.UserSettings
-import za.co.statecapture.android.notification.NotificationScheduler
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
+import za.co.statecapture.android.data.Reminder
+import za.co.statecapture.android.data.ReminderDao
+import za.co.statecapture.android.notification.NotificationScheduler
 
-class SettingsViewModel(private val repository: SettingsRepository) : ViewModel() {
+class SettingsViewModel(private val reminderDao: ReminderDao) : ViewModel() {
 
-    val settings: StateFlow<UserSettings> = repository.settingsFlow
+    val reminders: StateFlow<List<Reminder>> = reminderDao.getAllReminders()
         .stateIn(
             scope = viewModelScope,
             started = SharingStarted.WhileSubscribed(5000),
-            initialValue = UserSettings(false, 1, 9, 0)
+            initialValue = emptyList()
         )
 
-    fun toggleReminders(context: Context, enabled: Boolean) {
+    fun addReminder(context: Context, reminder: Reminder) {
         viewModelScope.launch {
-            repository.updateRemindersEnabled(enabled)
-            if (enabled) {
-                val current = settings.value
-                NotificationScheduler.scheduleReminder(context, current.reminderDay, current.reminderHour, current.reminderMinute)
-            } else {
-                NotificationScheduler.cancelReminder(context)
+            val id = reminderDao.insert(reminder)
+            if (reminder.isEnabled) {
+                NotificationScheduler.scheduleReminder(context, reminder.copy(id = id))
             }
         }
     }
 
-    fun updateTime(context: Context, day: Int, hour: Int, minute: Int) {
+    fun updateReminder(context: Context, reminder: Reminder) {
         viewModelScope.launch {
-            repository.updateReminderTime(day, hour, minute)
-            if (settings.value.remindersEnabled) {
-                NotificationScheduler.scheduleReminder(context, day, hour, minute)
+            reminderDao.update(reminder)
+            if (reminder.isEnabled) {
+                NotificationScheduler.scheduleReminder(context, reminder)
+            } else {
+                NotificationScheduler.cancelReminder(context, reminder.id)
             }
+        }
+    }
+
+    fun deleteReminder(context: Context, reminder: Reminder) {
+        viewModelScope.launch {
+            reminderDao.delete(reminder)
+            NotificationScheduler.cancelReminder(context, reminder.id)
         }
     }
 }

@@ -10,13 +10,24 @@ import androidx.core.app.NotificationCompat
 import androidx.work.CoroutineWorker
 import androidx.work.WorkerParameters
 import za.co.statecapture.android.MainActivity
-import za.co.statecapture.android.R
+import za.co.statecapture.android.data.AppDatabase
 import android.R as AndroidR
 
 class ReminderWorker(context: Context, params: WorkerParameters) : CoroutineWorker(context, params) {
 
     override suspend fun doWork(): Result {
-        sendNotification()
+        val reminderId = inputData.getLong("reminder_id", -1L)
+        if (reminderId == -1L) return Result.success()
+
+        val db = AppDatabase.getDatabase(applicationContext)
+        val reminder = db.reminderDao().getReminderById(reminderId)
+
+        if (reminder != null && reminder.isEnabled) {
+            sendNotification()
+            // Reschedule for next occurrence
+            NotificationScheduler.scheduleReminder(applicationContext, reminder)
+        }
+
         return Result.success()
     }
 
@@ -27,7 +38,7 @@ class ReminderWorker(context: Context, params: WorkerParameters) : CoroutineWork
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             val channel = NotificationChannel(
                 channelId,
-                "Monthly Reminders",
+                "Purchase Reminders",
                 NotificationManager.IMPORTANCE_DEFAULT
             ).apply {
                 description = "Reminders to capture your electricity purchases"
@@ -50,7 +61,7 @@ class ReminderWorker(context: Context, params: WorkerParameters) : CoroutineWork
         val notification = NotificationCompat.Builder(applicationContext, channelId)
             .setSmallIcon(AndroidR.drawable.ic_dialog_info) // Fallback icon
             .setContentTitle("Electricity Purchase Reminder")
-            .setContentText("It's the start of the month! Don't forget to capture your electricity purchases to track your block tariffs correctly.")
+            .setContentText("Remember to track your block tariffs accurately by recording your electricity purchase.")
             .setPriority(NotificationCompat.PRIORITY_DEFAULT)
             .setContentIntent(pendingIntent)
             .setAutoCancel(true)
