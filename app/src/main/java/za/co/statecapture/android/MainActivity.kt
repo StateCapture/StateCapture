@@ -36,10 +36,13 @@ import za.co.statecapture.android.ui.tariffs.TariffViewModel
 import za.co.statecapture.android.ui.theme.DynamicTariffTheme
 import za.co.statecapture.android.ui.support.SupportScreen
 
+import androidx.activity.enableEdgeToEdge
+
 class MainActivity : ComponentActivity() {
     
     override fun onCreate(savedInstanceState: Bundle?) {
         installSplashScreen()
+        enableEdgeToEdge()
         super.onCreate(savedInstanceState)
 
         MobileAds.initialize(this)
@@ -52,17 +55,19 @@ class MainActivity : ComponentActivity() {
 
         setContent {
             val initialScreen = intent?.getStringExtra("navigateTo") ?: "dashboard"
-        var currentScreen by remember { mutableStateOf(initialScreen) }
+            var currentScreen by remember { mutableStateOf(initialScreen) }
             var selectedMeter by remember { mutableStateOf<Meter?>(null) }
             val drawerState = rememberDrawerState(initialValue = DrawerValue.Closed)
             val scope = rememberCoroutineScope()
 
-                DynamicTariffTheme {
-                    ModalNavigationDrawer(
-                        drawerState = drawerState,
-                        drawerContent = {
-                            ModalDrawerSheet {
-                                Spacer(Modifier.height(12.dp))
+            DynamicTariffTheme {
+                ModalNavigationDrawer(
+                    drawerState = drawerState,
+                    drawerContent = {
+                        ModalDrawerSheet(
+                            windowInsets = WindowInsets.statusBars
+                        ) {
+                            Spacer(Modifier.height(12.dp))
                                 NavigationDrawerItem(
                                     icon = { Icon(Icons.Default.Home, contentDescription = null) },
                                     label = { Text("Dashboard") },
@@ -124,7 +129,11 @@ class MainActivity : ComponentActivity() {
                             val dashboardViewModel: DashboardViewModel = viewModel(factory = factory)
                             val tariffViewModel: TariffViewModel = viewModel(factory = factory)
 
-                            Column {
+                            Column(
+                                modifier = Modifier
+                                    .fillMaxSize()
+                                    .windowInsetsPadding(WindowInsets.navigationBars)
+                            ) {
                                 Box(modifier = Modifier.weight(1f)) {
                                     when (currentScreen) {
                                         "dashboard" -> {
