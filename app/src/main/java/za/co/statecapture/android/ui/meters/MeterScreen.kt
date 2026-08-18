@@ -28,6 +28,9 @@ import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.launch
 import za.co.statecapture.android.ui.components.SearchableProviderDialog
+import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.ui.text.input.ImeAction
+import androidx.compose.ui.text.input.KeyboardType
 import za.co.statecapture.android.data.Meter
 import za.co.statecapture.android.domain.model.TariffIndexItem
 import za.co.statecapture.android.ui.theme.ProviderThemedBlock
@@ -348,13 +351,37 @@ fun MeterDialog(
                     value = name,
                     onValueChange = { name = it },
                     label = { Text("Meter Nickname (e.g. Home)") },
-                    modifier = Modifier.fillMaxWidth()
+                    modifier = Modifier.fillMaxWidth(),
+                    singleLine = true,
+                    keyboardOptions = KeyboardOptions(
+                        imeAction = ImeAction.Next
+                    )
                 )
+                val isMeterNumberError = meterNumber.isNotEmpty() && meterNumber.length != 11
                 OutlinedTextField(
                     value = meterNumber,
-                    onValueChange = { meterNumber = it },
+                    onValueChange = { 
+                        val filtered = it.filter { char -> char.isDigit() }.take(11)
+                        meterNumber = filtered 
+                    },
                     label = { Text("Meter Number") },
-                    modifier = Modifier.padding(top = 8.dp).fillMaxWidth()
+                    modifier = Modifier.padding(top = 8.dp).fillMaxWidth(),
+                    singleLine = true,
+                    keyboardOptions = KeyboardOptions(
+                        keyboardType = KeyboardType.Number,
+                        imeAction = ImeAction.Done
+                    ),
+                    isError = isMeterNumberError,
+                    supportingText = {
+                        Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+                            if (isMeterNumberError) {
+                                Text("Must be exactly 11 digits")
+                            } else {
+                                Text("") // Empty to keep layout stable
+                            }
+                            Text("${meterNumber.length}/11")
+                        }
+                    }
                 )
 
                 Spacer(modifier = Modifier.height(16.dp))
@@ -430,7 +457,7 @@ fun MeterDialog(
                 onClick = {
                     selectedProvider?.let { onConfirm(name, meterNumber, it.id, icon) }
                 },
-                enabled = name.isNotBlank() && meterNumber.isNotBlank() && selectedProvider != null,
+                enabled = name.isNotBlank() && meterNumber.length == 11 && selectedProvider != null,
                 colors = ButtonDefaults.buttonColors(containerColor = buttonColor)
             ) {
                 Text(confirmLabel)
