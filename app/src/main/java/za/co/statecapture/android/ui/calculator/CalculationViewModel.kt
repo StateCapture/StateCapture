@@ -100,13 +100,14 @@ class CalculationViewModel(
     }
 
     fun onInputAmountChange(amount: String) {
-        val parsed = amount.toDoubleOrNull()
+        val filteredAmount = amount.filter { it.isDigit() }
+        val parsed = filteredAmount.toDoubleOrNull()
         // Prevent stupidly large values (limit to 100,000)
         if (parsed != null && parsed > 100_000.0) return
         // Prevent overly long inputs (e.g. many leading zeros)
-        if (amount.length > 10) return
+        if (filteredAmount.length > 10) return
 
-        _uiState.update { it.copy(inputAmount = amount) }
+        _uiState.update { it.copy(inputAmount = filteredAmount) }
         calculateResult()
     }
 
