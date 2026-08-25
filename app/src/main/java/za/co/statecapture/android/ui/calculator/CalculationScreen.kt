@@ -801,7 +801,13 @@ fun EditPurchaseDialog(
     fun onAmountInput(input: String) {
         amountText = input
         val amountVal = input.toDoubleOrNull() ?: return
-        currentExclCents = if (dialogIncludeVat) (amountVal * 100.0) / vatMultiplier else amountVal * 100.0
+        currentExclCents = if (dialogIncludeVat) {
+            val totalCents = Math.round(amountVal * 100.0).toDouble()
+            val vatCents = Math.round(totalCents * (vatRate / vatMultiplier)).toDouble()
+            totalCents - vatCents
+        } else {
+            Math.round(amountVal * 100.0).toDouble()
+        }
         
         if (isLinked && provider != null) {
             val result = calculator.calculateYield(provider, currentExclCents, 0.0, purchaseDate)
@@ -940,7 +946,12 @@ fun EditPurchaseDialog(
             Button(
                 onClick = {
                     if (kwhVal != null) {
-                        val vatCents = currentExclCents * vatRate
+                        val vatCents = if (dialogIncludeVat) {
+                            val totalCents = Math.round((amountText.toDoubleOrNull() ?: 0.0) * 100.0).toDouble()
+                            Math.round(totalCents * (vatRate / vatMultiplier)).toDouble()
+                        } else {
+                            Math.round(currentExclCents * vatRate).toDouble()
+                        }
                         onConfirm(purchase.copy(
                             amountCents    = currentExclCents,
                             vatAmountCents = vatCents,
