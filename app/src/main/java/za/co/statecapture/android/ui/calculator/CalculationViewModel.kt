@@ -364,7 +364,8 @@ class CalculationViewModel(
                     cumulativeBreakdown = breakdown,
                     recentPurchases = sorted,
                     availableFreeKwh = availableFreeKwh,
-                    fixedMonthlyChargeCents = activeFixedCharge
+                    fixedMonthlyChargeCents = activeFixedCharge,
+                    hasAnyPurchases = allHistory.isNotEmpty()
                 )
             }
             calculateResult()
@@ -536,5 +537,7 @@ data class CalculationUiState(
     val smartWarnings: List<SmartWarning> = emptyList(),
     val availableFreeKwh: Double = 0.0,
     // Fixed monthly charge for the selected provider's active period (0 if none)
-    val fixedMonthlyChargeCents: Int = 0
+    val fixedMonthlyChargeCents: Int = 0,
+    // Onboarding: true once the meter has at least one recorded purchase
+    val hasAnyPurchases: Boolean = false
 )

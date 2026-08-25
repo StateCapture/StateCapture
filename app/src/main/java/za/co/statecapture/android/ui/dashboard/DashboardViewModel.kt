@@ -4,6 +4,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
+import za.co.statecapture.android.data.MeterDao
 import za.co.statecapture.android.data.PurchaseDao
 import java.util.Calendar
 import java.util.Locale
@@ -34,10 +35,12 @@ data class DashboardState(
     val averagesSubtitle: String = "Based on complete months with purchases",
     val monthlyHistory: List<MonthData> = emptyList(),
     val firstPurchaseTimestamp: Long? = null,
-    val includeVat: Boolean = true
+    val includeVat: Boolean = true,
+    val hasMeters: Boolean = false,
+    val hasPurchases: Boolean = false
 )
 
-class DashboardViewModel(private val purchaseDao: PurchaseDao) : ViewModel() {
+class DashboardViewModel(private val purchaseDao: PurchaseDao, private val meterDao: MeterDao) : ViewModel() {
     private val _uiState = MutableStateFlow(DashboardState())
     val uiState: StateFlow<DashboardState> = _uiState.asStateFlow()
 
@@ -94,8 +97,9 @@ class DashboardViewModel(private val purchaseDao: PurchaseDao) : ViewModel() {
 
             combine(
                 statsFlow,
-                purchaseDao.getDistinctMonthCount()
-            ) { stats, _ ->
+                purchaseDao.getDistinctMonthCount(),
+                meterDao.getAllMeters()
+            ) { stats, _, meters ->
                 val includeVat = _uiState.value.includeVat
                 val thisMonthTotal = (stats[0] as? Double ?: 0.0) + (if (includeVat) (stats[1] as? Double ?: 0.0) else 0.0)
                 val thisMonthKwh = stats[2] as? Double ?: 0.0
@@ -190,7 +194,9 @@ class DashboardViewModel(private val purchaseDao: PurchaseDao) : ViewModel() {
                     averagesSubtitle = averagesSubtitle,
                     monthlyHistory = history,
                     firstPurchaseTimestamp = firstTimestamp,
-                    includeVat = includeVat
+                    includeVat = includeVat,
+                    hasMeters = meters.isNotEmpty(),
+                    hasPurchases = allPurchases.isNotEmpty()
                 )
             }.collect { state ->
                 _uiState.update { state }
