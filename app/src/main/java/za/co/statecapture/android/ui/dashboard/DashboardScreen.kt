@@ -93,7 +93,7 @@ fun DashboardScreen(
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
                 Text(
-                    "Usage Summary",
+                    "Cost & Consumption",
                     style = MaterialTheme.typography.headlineSmall,
                     fontWeight = FontWeight.Bold
                 )
@@ -117,21 +117,31 @@ fun DashboardScreen(
                     .weight(1f)
                     .fillMaxWidth()
             ) {
-                // Row 1: This Month & Monthly Average
-                item {
+                // Row 1: This Month So Far — full width
+                item(span = { GridItemSpan(2) }) {
                     StatCard(
-                        title = "This Month",
+                        title = "This Month So Far",
                         rand = uiState.thisMonthRand,
                         kwh = uiState.thisMonthKwh,
-                        color = MaterialTheme.colorScheme.primary
+                        color = MaterialTheme.colorScheme.primary,
+                        badge = if (uiState.thisMonthPurchaseCount > 0) {
+                            val n = uiState.thisMonthPurchaseCount
+                            "$n purchase${if (n == 1) "" else "s"} recorded"
+                        } else null
                     )
                 }
-                item {
-                    StatCard(
-                        title = "Monthly Average",
-                        rand = uiState.monthlyAverageRand,
-                        kwh = uiState.monthlyAverageKwh,
-                        color = MaterialTheme.colorScheme.tertiary
+
+                // Row 2: Averages — full width
+                item(span = { GridItemSpan(2) }) {
+                    AveragesCard(
+                        dailyRand = uiState.dailyAverageRand,
+                        dailyKwh = uiState.dailyAverageKwh,
+                        weeklyRand = uiState.weeklyAverageRand,
+                        weeklyKwh = uiState.weeklyAverageKwh,
+                        monthlyRand = uiState.monthlyAverageRand,
+                        monthlyKwh = uiState.monthlyAverageKwh,
+                        subtitle = uiState.averagesSubtitle,
+                        color = MaterialTheme.colorScheme.secondary
                     )
                 }
 
@@ -182,7 +192,9 @@ fun StatCard(
     rand: Double,
     kwh: Double,
     color: Color,
-    footer: String? = null
+    footer: String? = null,
+    badge: String? = null,
+    subtitle: String? = null
 ) {
     Card(
         modifier = Modifier.fillMaxWidth(),
@@ -193,7 +205,26 @@ fun StatCard(
         Column(
             modifier = Modifier.padding(16.dp)
         ) {
-            Text(title, style = MaterialTheme.typography.labelMedium, color = color, fontWeight = FontWeight.Bold)
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(title, style = MaterialTheme.typography.labelMedium, color = color, fontWeight = FontWeight.Bold)
+                if (badge != null) {
+                    Surface(
+                        color = color.copy(alpha = 0.12f),
+                        shape = RoundedCornerShape(8.dp)
+                    ) {
+                        Text(
+                            badge,
+                            modifier = Modifier.padding(horizontal = 8.dp, vertical = 3.dp),
+                            style = MaterialTheme.typography.labelSmall,
+                            color = color
+                        )
+                    }
+                }
+            }
             Spacer(modifier = Modifier.height(4.dp))
             Text(
                 "R ${String.format("%.2f", rand)}",
@@ -205,7 +236,15 @@ fun StatCard(
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
-
+            if (subtitle != null) {
+                Spacer(modifier = Modifier.height(4.dp))
+                Text(
+                    subtitle,
+                    style = MaterialTheme.typography.labelSmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f),
+                    fontStyle = FontStyle.Italic
+                )
+            }
             if (footer != null) {
                 Spacer(modifier = Modifier.height(12.dp))
                 HorizontalDivider(color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.05f))
@@ -218,6 +257,75 @@ fun StatCard(
                 )
             }
         }
+    }
+}
+
+@Composable
+fun AveragesCard(
+    dailyRand: Double,
+    dailyKwh: Double,
+    weeklyRand: Double,
+    weeklyKwh: Double,
+    monthlyRand: Double,
+    monthlyKwh: Double,
+    subtitle: String,
+    color: Color = MaterialTheme.colorScheme.secondary
+) {
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+        shape = RoundedCornerShape(12.dp)
+    ) {
+        Column(
+            modifier = Modifier.padding(16.dp)
+        ) {
+            Text(
+                "Averages",
+                style = MaterialTheme.typography.labelMedium,
+                color = color,
+                fontWeight = FontWeight.Bold
+            )
+            Spacer(modifier = Modifier.height(12.dp))
+
+            AverageRow(label = "Daily", kwh = dailyKwh, rand = dailyRand)
+            Spacer(modifier = Modifier.height(8.dp))
+            AverageRow(label = "Weekly", kwh = weeklyKwh, rand = weeklyRand)
+            Spacer(modifier = Modifier.height(8.dp))
+            AverageRow(label = "Monthly", kwh = monthlyKwh, rand = monthlyRand)
+
+            Spacer(modifier = Modifier.height(12.dp))
+            HorizontalDivider(color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.05f))
+            Spacer(modifier = Modifier.height(8.dp))
+            Text(
+                subtitle,
+                style = MaterialTheme.typography.labelSmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f),
+                fontStyle = FontStyle.Italic
+            )
+        }
+    }
+}
+
+@Composable
+private fun AverageRow(label: String, kwh: Double, rand: Double) {
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.SpaceBetween,
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Text(
+            text = "$label:",
+            style = MaterialTheme.typography.bodyMedium,
+            fontWeight = FontWeight.Medium,
+            color = MaterialTheme.colorScheme.onSurfaceVariant
+        )
+        Text(
+            text = "${String.format("%.1f", kwh)} kWh @ R ${String.format("%.2f", rand)}",
+            style = MaterialTheme.typography.bodyMedium,
+            fontWeight = FontWeight.Bold,
+            color = MaterialTheme.colorScheme.onSurface
+        )
     }
 }
 
