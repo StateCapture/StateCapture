@@ -9,13 +9,14 @@ import androidx.sqlite.db.SupportSQLiteDatabase
 
 import androidx.room.TypeConverters
 
-@Database(entities = [Meter::class, Purchase::class, TariffProviderEntity::class, TariffIndexEntity::class], version = 8, exportSchema = false)
+@Database(entities = [Meter::class, Purchase::class, TariffProviderEntity::class, TariffIndexEntity::class, Reminder::class], version = 9, exportSchema = false)
 @TypeConverters(TariffConverters::class)
 abstract class AppDatabase : RoomDatabase() {
 
     abstract fun meterDao(): MeterDao
     abstract fun purchaseDao(): PurchaseDao
     abstract fun tariffDao(): TariffDao
+    abstract fun reminderDao(): ReminderDao
 
     companion object {
         private val MIGRATION_4_5 = object : Migration(4, 5) {
@@ -46,6 +47,12 @@ abstract class AppDatabase : RoomDatabase() {
             }
         }
 
+        private val MIGRATION_8_9 = object : Migration(8, 9) {
+            override fun migrate(db: SupportSQLiteDatabase) {
+                db.execSQL("CREATE TABLE IF NOT EXISTS reminders (id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, frequency TEXT NOT NULL, dayValue INTEGER NOT NULL, hour INTEGER NOT NULL, minute INTEGER NOT NULL, isEnabled INTEGER NOT NULL DEFAULT 1)")
+            }
+        }
+
         @Volatile
         private var INSTANCE: AppDatabase? = null
 
@@ -56,7 +63,7 @@ abstract class AppDatabase : RoomDatabase() {
                     AppDatabase::class.java,
                     "statecapture_database"
                 )
-                .addMigrations(MIGRATION_4_5, MIGRATION_5_6, MIGRATION_6_7, MIGRATION_7_8)
+                .addMigrations(MIGRATION_4_5, MIGRATION_5_6, MIGRATION_6_7, MIGRATION_7_8, MIGRATION_8_9)
                 .fallbackToDestructiveMigration()
                 .build()
                 INSTANCE = instance

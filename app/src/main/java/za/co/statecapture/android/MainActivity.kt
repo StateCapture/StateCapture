@@ -16,8 +16,11 @@ import com.google.android.gms.ads.MobileAds
 import kotlinx.coroutines.launch
 import za.co.statecapture.android.data.AppDatabase
 import za.co.statecapture.android.data.Meter
-import za.co.statecapture.android.data.repository.SettingsRepository
+import za.co.statecapture.android.data.migration.ReminderMigrationHelper
 import za.co.statecapture.android.data.repository.TariffRepository
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 import za.co.statecapture.android.ui.AppViewModelFactory
 import za.co.statecapture.android.ui.about.AboutScreen
 import za.co.statecapture.android.ui.calculator.CalculationScreen
@@ -49,9 +52,12 @@ class MainActivity : ComponentActivity() {
 
         val database = AppDatabase.getDatabase(this)
         val tariffRepository = TariffRepository(this)
-        val settingsRepository = SettingsRepository(this)
-        
-        val factory = AppViewModelFactory(database, tariffRepository, settingsRepository)
+        val factory = AppViewModelFactory(database, tariffRepository)
+
+        // One-time migration: carry over any existing DataStore reminder to Room
+        CoroutineScope(Dispatchers.IO).launch {
+            ReminderMigrationHelper.migrateIfNeeded(this@MainActivity, database.reminderDao())
+        }
 
         setContent {
             val initialScreen = intent?.getStringExtra("navigateTo") ?: "dashboard"
