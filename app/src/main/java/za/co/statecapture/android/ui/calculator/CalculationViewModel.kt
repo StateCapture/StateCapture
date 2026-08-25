@@ -126,13 +126,16 @@ class CalculationViewModel(
         val neededKwh = (targetCumulativeKwh - currentKwh).coerceAtLeast(0.0)
         
         if (neededKwh > AppConstants.BLOCK_EXHAUSTION_TOLERANCE_KWH) {
-            _uiState.update { 
-                it.copy(
-                    mode = CalculationMode.KwhToRands,
-                    inputAmount = String.format(Locale.US, "%.1f", neededKwh)
-                )
+            val roundedUnits = Math.round(neededKwh).toInt()
+            if (roundedUnits > 0) {
+                _uiState.update { 
+                    it.copy(
+                        mode = CalculationMode.KwhToRands,
+                        inputAmount = roundedUnits.toString()
+                    )
+                }
+                calculateResult()
             }
-            calculateResult()
         }
     }
 
