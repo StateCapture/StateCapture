@@ -9,7 +9,7 @@ import androidx.sqlite.db.SupportSQLiteDatabase
 
 import androidx.room.TypeConverters
 
-@Database(entities = [Meter::class, Purchase::class, TariffProviderEntity::class, TariffIndexEntity::class, Reminder::class], version = 9, exportSchema = false)
+@Database(entities = [Meter::class, Purchase::class, TariffProviderEntity::class, TariffIndexEntity::class, Reminder::class], version = 10, exportSchema = false)
 @TypeConverters(TariffConverters::class)
 abstract class AppDatabase : RoomDatabase() {
 
@@ -53,6 +53,19 @@ abstract class AppDatabase : RoomDatabase() {
             }
         }
 
+        private val MIGRATION_9_10 = object : Migration(9, 10) {
+            override fun migrate(db: SupportSQLiteDatabase) {
+                // Recompute exact integer cents for existing purchases to eliminate floating point rounding errors
+                db.execSQL("""
+                    UPDATE purchases 
+                    SET 
+                        vatAmountCents = ROUND(ROUND(amountCents + vatAmountCents) * 15.0 / 115.0),
+                        amountCents = ROUND(amountCents + vatAmountCents) - ROUND(ROUND(amountCents + vatAmountCents) * 15.0 / 115.0)
+                    WHERE amountCents > 0
+                """.trimIndent())
+            }
+        }
+
         @Volatile
         private var INSTANCE: AppDatabase? = null
 
@@ -63,7 +76,7 @@ abstract class AppDatabase : RoomDatabase() {
                     AppDatabase::class.java,
                     "statecapture_database"
                 )
-                .addMigrations(MIGRATION_4_5, MIGRATION_5_6, MIGRATION_6_7, MIGRATION_7_8, MIGRATION_8_9)
+                .addMigrations(MIGRATION_4_5, MIGRATION_5_6, MIGRATION_6_7, MIGRATION_7_8, MIGRATION_8_9, MIGRATION_9_10)
                 .fallbackToDestructiveMigration()
                 .build()
                 INSTANCE = instance

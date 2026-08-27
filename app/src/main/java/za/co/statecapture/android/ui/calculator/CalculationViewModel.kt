@@ -126,13 +126,16 @@ class CalculationViewModel(
         val neededKwh = (targetCumulativeKwh - currentKwh).coerceAtLeast(0.0)
         
         if (neededKwh > AppConstants.BLOCK_EXHAUSTION_TOLERANCE_KWH) {
-            _uiState.update { 
-                it.copy(
-                    mode = CalculationMode.KwhToRands,
-                    inputAmount = String.format(Locale.US, "%.1f", neededKwh)
-                )
+            val roundedUnits = Math.round(neededKwh).toInt()
+            if (roundedUnits > 0) {
+                _uiState.update { 
+                    it.copy(
+                        mode = CalculationMode.KwhToRands,
+                        inputAmount = roundedUnits.toString()
+                    )
+                }
+                calculateResult()
             }
-            calculateResult()
         }
     }
 
@@ -389,14 +392,16 @@ class CalculationViewModel(
             // For the Meter screen, only include it on the first purchase of the month.
             val fixedChargeAlreadyPaid = state.monthlyCumulativeKwh > 0
             val result = if (state.mode == CalculationMode.RandsToKwh) {
-                val baseInput = if (state.includeVat) {
-                    (input * 100.0 / AppConstants.VAT_MULTIPLIER) / 100.0
+                val exclCents = if (state.includeVat) {
+                    val totalCents = Math.round(input * 100.0).toDouble()
+                    val vatCents = Math.round(totalCents * (AppConstants.VAT_RATE / AppConstants.VAT_MULTIPLIER)).toDouble()
+                    totalCents - vatCents
                 } else {
-                    input
+                    Math.round(input * 100.0).toDouble()
                 }
                 calculator.calculateYield(
                     provider = provider,
-                    purchaseAmountCents = baseInput * 100.0,
+                    purchaseAmountCents = exclCents,
                     previousPurchasesKwh = state.monthlyCumulativeKwh,
                     date = referenceDate
                 )
@@ -410,7 +415,13 @@ class CalculationViewModel(
                 )
             }
 
-            val vatAmountCents = Math.round(result.totalCostCents * AppConstants.VAT_RATE).toDouble()
+            val vatAmountCents = if (state.mode == CalculationMode.RandsToKwh && state.includeVat && !result.isCapped) {
+                val totalCents = Math.round(input * 100.0).toDouble()
+                val calculatedVat = Math.round(totalCents * (AppConstants.VAT_RATE / AppConstants.VAT_MULTIPLIER)).toDouble()
+                calculatedVat
+            } else {
+                Math.round(result.totalCostCents * AppConstants.VAT_RATE).toDouble()
+            }
             val displayResult = CalculationDisplayResult(
                 result = result,
                 vatAmountCents = vatAmountCents,
