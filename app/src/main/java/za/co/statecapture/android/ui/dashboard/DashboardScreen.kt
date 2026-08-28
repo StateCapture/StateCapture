@@ -43,7 +43,8 @@ enum class ChartType { LINE, BAR, PIE }
 @Composable
 fun DashboardScreen(
     viewModel: DashboardViewModel,
-    onMenuClick: () -> Unit
+    onMenuClick: () -> Unit,
+    onNavigateToMeters: () -> Unit = {}
 ) {
     val uiState by viewModel.uiState.collectAsState()
 
@@ -117,6 +118,16 @@ fun DashboardScreen(
                     .weight(1f)
                     .fillMaxWidth()
             ) {
+                // Onboarding card — shown when no meters or no purchases exist
+                if (!uiState.hasMeters || !uiState.hasPurchases) {
+                    item(span = { GridItemSpan(2) }) {
+                        GetStartedCard(
+                            hasMeters = uiState.hasMeters,
+                            onActionClick = onNavigateToMeters
+                        )
+                    }
+                }
+
                 // Row 1: This Month So Far — full width
                 item(span = { GridItemSpan(2) }) {
                     StatCard(
@@ -182,6 +193,69 @@ fun DashboardScreen(
                 }
             }
 
+        }
+    }
+}
+
+@Composable
+fun GetStartedCard(
+    hasMeters: Boolean,
+    onActionClick: () -> Unit
+) {
+    val (emoji, title, body, buttonLabel) = if (!hasMeters) {
+        listOf(
+            "⚡",
+            "Welcome to State Capture!",
+            "Track your prepaid electricity usage and spend. Start by adding your first meter — your home, flat, or office.",
+            "Add your first meter"
+        )
+    } else {
+        listOf(
+            "🎉",
+            "Almost there!",
+            "Your meter is set up. Now tap it on the Meters screen to calculate and record your first electricity purchase.",
+            "Go to Meters"
+        )
+    }
+
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        colors = CardDefaults.cardColors(
+            containerColor = MaterialTheme.colorScheme.primaryContainer
+        ),
+        shape = RoundedCornerShape(16.dp)
+    ) {
+        Column(
+            modifier = Modifier.padding(20.dp),
+            verticalArrangement = Arrangement.spacedBy(8.dp)
+        ) {
+            Text(
+                text = "$emoji  $title",
+                style = MaterialTheme.typography.titleMedium,
+                fontWeight = FontWeight.Bold,
+                color = MaterialTheme.colorScheme.onPrimaryContainer
+            )
+            Text(
+                text = body,
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.8f)
+            )
+            Spacer(modifier = Modifier.height(4.dp))
+            Button(
+                onClick = onActionClick,
+                modifier = Modifier.fillMaxWidth(),
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = MaterialTheme.colorScheme.primary
+                )
+            ) {
+                Icon(
+                    imageVector = Icons.Default.Add,
+                    contentDescription = null,
+                    modifier = Modifier.size(18.dp)
+                )
+                Spacer(modifier = Modifier.width(8.dp))
+                Text(buttonLabel)
+            }
         }
     }
 }

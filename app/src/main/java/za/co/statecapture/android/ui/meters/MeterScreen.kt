@@ -40,6 +40,7 @@ import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.zIndex
 import za.co.statecapture.android.util.rememberReorderState
 import za.co.statecapture.android.util.reorderable
+import androidx.compose.ui.text.font.FontWeight
 import kotlin.math.roundToInt
 
 // SA flag colours used for swipe reveal
@@ -91,27 +92,36 @@ fun MeterScreen(
                 .padding(padding)
                 .fillMaxSize()
         ) {
-            LazyColumn(
-                state = lazyListState,
-                modifier = Modifier
-                    .weight(1f)
-                    .reorderable(reorderState),
-                contentPadding = PaddingValues(vertical = 8.dp),
-                verticalArrangement = Arrangement.spacedBy(0.dp)
-            ) {
-                items(meters, key = { it.id }) { meter ->
-                    val isDragging = reorderState.draggedIndex == meters.indexOf(meter)
-                    val provider = availableProviders.find { it.id == meter.providerId }
+        Box(
+            modifier = Modifier
+                .weight(1f)
+                .fillMaxWidth()
+        ) {
+            if (meters.isEmpty()) {
+                MeterEmptyState()
+            } else {
+                LazyColumn(
+                    state = lazyListState,
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .reorderable(reorderState),
+                    contentPadding = PaddingValues(vertical = 8.dp),
+                    verticalArrangement = Arrangement.spacedBy(0.dp)
+                ) {
+                    items(meters, key = { it.id }) { meter ->
+                        val isDragging = reorderState.draggedIndex == meters.indexOf(meter)
+                        val provider = availableProviders.find { it.id == meter.providerId }
 
-                    SwipeableMeterItem(
-                        meter = meter,
-                        provider = provider,
-                        isDragging = isDragging,
-                        dragOffset = if (isDragging) reorderState.dragOffset else 0f,
-                        onDelete = { onDeleteMeter(meter) },
-                        onEdit = { editingMeter = meter },
-                        onClick = { onMeterClick(meter) }
-                    )
+                        SwipeableMeterItem(
+                            meter = meter,
+                            provider = provider,
+                            isDragging = isDragging,
+                            dragOffset = if (isDragging) reorderState.dragOffset else 0f,
+                            onDelete = { onDeleteMeter(meter) },
+                            onEdit = { editingMeter = meter },
+                            onClick = { onMeterClick(meter) }
+                        )
+                    }
                 }
             }
         }
@@ -146,6 +156,47 @@ fun MeterScreen(
                     editingMeter = null
                 }
             )
+        }
+        }
+    }
+}
+
+@Composable
+fun MeterEmptyState() {
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(24.dp),
+        contentAlignment = Alignment.Center
+    ) {
+        Card(
+            modifier = Modifier.fillMaxWidth(),
+            colors = CardDefaults.cardColors(
+                containerColor = MaterialTheme.colorScheme.primaryContainer
+            ),
+            shape = RoundedCornerShape(16.dp)
+        ) {
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(28.dp),
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.spacedBy(12.dp)
+            ) {
+                Text("⚡", style = MaterialTheme.typography.displaySmall)
+                Text(
+                    text = "No Meters Yet",
+                    style = MaterialTheme.typography.titleLarge,
+                    fontWeight = FontWeight.Bold,
+                    color = MaterialTheme.colorScheme.onPrimaryContainer
+                )
+                Text(
+                    text = "Tap the  +  button at the bottom right to add your first electricity meter (e.g. Home, Flat, or Office) and select your tariff provider.",
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.8f),
+                    textAlign = androidx.compose.ui.text.style.TextAlign.Center
+                )
+            }
         }
     }
 }

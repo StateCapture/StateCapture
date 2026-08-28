@@ -418,6 +418,32 @@ fun CalculationScreen(
                     Spacer(modifier = Modifier.height(16.dp))
                 }
 
+                // Onboarding hint \u2014 shown until the first purchase is recorded
+                if (uiState.selectedMeter != null && !uiState.hasAnyPurchases) {
+                    Card(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(bottom = 12.dp),
+                        colors = CardDefaults.cardColors(
+                            containerColor = MaterialTheme.colorScheme.secondaryContainer
+                        ),
+                        shape = RoundedCornerShape(12.dp)
+                    ) {
+                        Row(
+                            modifier = Modifier.padding(14.dp),
+                            verticalAlignment = Alignment.Top,
+                            horizontalArrangement = Arrangement.spacedBy(10.dp)
+                        ) {
+                            Text("💡", style = MaterialTheme.typography.bodyLarge)
+                            Text(
+                                text = "Enter your purchase amount (e.g. R500) or number of units (e.g. 100 kWh), and tap \"Record Purchase\" below to save it.",
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onSecondaryContainer
+                            )
+                        }
+                    }
+                }
+
                 // Amount input (placed immediately below top card / visualization)
                 OutlinedTextField(
                     value = uiState.inputAmount,

@@ -146,7 +146,8 @@ class MainActivity : ComponentActivity() {
                                             DynamicTariffTheme(isHomeScreen = true) {
                                                 DashboardScreen(
                                                     viewModel = dashboardViewModel,
-                                                    onMenuClick = { scope.launch { drawerState.open() } }
+                                                    onMenuClick = { scope.launch { drawerState.open() } },
+                                                    onNavigateToMeters = { currentScreen = "meters" }
                                                 )
                                             }
                                         }

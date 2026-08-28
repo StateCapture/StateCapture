@@ -24,7 +24,7 @@ class AppViewModelFactory(
             modelClass.isAssignableFrom(CalculationViewModel::class.java) ->
                 CalculationViewModel(tariffRepository, database.purchaseDao()) as T
             modelClass.isAssignableFrom(DashboardViewModel::class.java) ->
-                DashboardViewModel(database.purchaseDao()) as T
+                DashboardViewModel(database.purchaseDao(), database.meterDao()) as T
             modelClass.isAssignableFrom(TariffViewModel::class.java) ->
                 TariffViewModel(tariffRepository) as T
             modelClass.isAssignableFrom(SettingsViewModel::class.java) ->
