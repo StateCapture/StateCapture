@@ -3,9 +3,17 @@
 > Capture the State of your Prepaid utilities.
 > *The official commission of inquiry into your next kilowatt.*
 
-**State Capture** is a modern, premium Android application built to help South African consumers calculate prepaid electricity yields, track cumulative monthly spending, and optimize their utility costs. 
+**State Capture** is a free, modern Android application built to help South African consumers calculate prepaid electricity yields, track cumulative monthly spending, and optimize their utility costs.
 
 Prepaid electricity in South Africa is sold on a **Block Tariff** (inclined block tariff) structure where the rate per kWh increases the more units you purchase during a calendar month. **State Capture** automatically tracks your purchases, calculates which tier you are currently on, and gives you the exact yield for your next purchase.
+
+---
+
+<p align="center">
+  <a href="https://play.google.com/store/apps/details?id=za.co.statecapture.android">
+    <img alt="Get it on Google Play" src="assets/GetItOnGooglePlay_Badge_Web_color_English.png" height="60"/>
+  </a>
+</p>
 
 ---
 
@@ -35,10 +43,10 @@ Below are some previews of the app's clean Material 3 design and features:
 
 * **💸 Dynamic Dashboard:**
   * View total spend and unit yields across four timeframes:
-    * **This Month** 💸
+    * **This Month So Far** 💸
+    * **Averages** 🤌 (daily, weekly or monthly)
     * **Last 12 Months** 📈
     * **All Time** 🕰️
-    * **Monthly Average** 🤌
 * **📊 Step-Tariff Engine:**
   * Accounts for cumulative purchases in the current month to correctly calculate tier-based yield.
   * Displays a full breakdown of how your purchase is split across tariff blocks.
