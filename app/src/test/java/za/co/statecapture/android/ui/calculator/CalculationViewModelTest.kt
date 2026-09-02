@@ -177,6 +177,8 @@ class CalculationViewModelTest {
         assertEquals("500", viewModel.uiState.value.inputAmount)
     }
 
+
+
     // ── Sort toggle ───────────────────────────────────────────────────────────
 
     @Test

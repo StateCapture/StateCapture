@@ -444,6 +444,13 @@ fun CalculationScreen(
                     }
                 }
 
+                // Mode selector
+                SingleChoiceSegmentedButtonRow(modifier = Modifier.fillMaxWidth()) {
+                    SegmentedButton(selected = uiState.mode == CalculationMode.RandsToKwh, onClick = { viewModel.onModeChange(CalculationMode.RandsToKwh) }, shape = SegmentedButtonDefaults.itemShape(0, 2)) { Text("Rands → Units") }
+                    SegmentedButton(selected = uiState.mode == CalculationMode.KwhToRands, onClick = { viewModel.onModeChange(CalculationMode.KwhToRands) }, shape = SegmentedButtonDefaults.itemShape(1, 2)) { Text("Units → Rands") }
+                }
+                Spacer(modifier = Modifier.height(12.dp))
+
                 // Amount input (placed immediately below top card / visualization)
                 OutlinedTextField(
                     value = uiState.inputAmount,
@@ -462,12 +469,6 @@ fun CalculationScreen(
                     singleLine = true
                 )
                 Spacer(modifier = Modifier.height(12.dp))
-
-                // Mode selector
-                SingleChoiceSegmentedButtonRow(modifier = Modifier.fillMaxWidth()) {
-                    SegmentedButton(selected = uiState.mode == CalculationMode.RandsToKwh, onClick = { viewModel.onModeChange(CalculationMode.RandsToKwh) }, shape = SegmentedButtonDefaults.itemShape(0, 2)) { Text("Rands → Units") }
-                    SegmentedButton(selected = uiState.mode == CalculationMode.KwhToRands, onClick = { viewModel.onModeChange(CalculationMode.KwhToRands) }, shape = SegmentedButtonDefaults.itemShape(1, 2)) { Text("Units → Rands") }
-                }
                 Spacer(modifier = Modifier.height(12.dp))
 
                 // Block Shortcuts ("Quick fill" pills)

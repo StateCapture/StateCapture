@@ -392,7 +392,10 @@ class CalculationViewModel(
             // For the Tariffs screen (no meter) the fixed charge is always shown fresh.
             // For the Meter screen, only include it on the first purchase of the month.
             val fixedChargeAlreadyPaid = state.monthlyCumulativeKwh > 0
-            val result = if (state.mode == CalculationMode.RandsToKwh) {
+            val result: CalculationResult
+            val vatAmountCents: Double
+
+            if (state.mode == CalculationMode.RandsToKwh) {
                 val exclCents = if (state.includeVat) {
                     val totalCents = Math.round(input * 100.0).toDouble()
                     val vatCents = Math.round(totalCents * (AppConstants.VAT_RATE / AppConstants.VAT_MULTIPLIER)).toDouble()
@@ -400,28 +403,56 @@ class CalculationViewModel(
                 } else {
                     Math.round(input * 100.0).toDouble()
                 }
-                calculator.calculateYield(
+                result = calculator.calculateYield(
                     provider = provider,
                     purchaseAmountCents = exclCents,
                     previousPurchasesKwh = state.monthlyCumulativeKwh,
                     date = referenceDate
                 )
+                vatAmountCents = if (state.includeVat && !result.isCapped) {
+                    val totalCents = Math.round(input * 100.0).toDouble()
+                    Math.round(totalCents * (AppConstants.VAT_RATE / AppConstants.VAT_MULTIPLIER)).toDouble()
+                } else {
+                    Math.round(result.totalCostCents * AppConstants.VAT_RATE).toDouble()
+                }
             } else {
-                calculator.calculateCost(
+                val initialCostResult = calculator.calculateCost(
                     provider = provider,
                     targetKwh = input,
                     previousPurchasesKwh = state.monthlyCumulativeKwh,
                     date = referenceDate,
                     includeFixedCharge = !fixedChargeAlreadyPaid
                 )
-            }
 
-            val vatAmountCents = if (state.mode == CalculationMode.RandsToKwh && state.includeVat && !result.isCapped) {
-                val totalCents = Math.round(input * 100.0).toDouble()
-                val calculatedVat = Math.round(totalCents * (AppConstants.VAT_RATE / AppConstants.VAT_MULTIPLIER)).toDouble()
-                calculatedVat
-            } else {
-                Math.round(result.totalCostCents * AppConstants.VAT_RATE).toDouble()
+                val vatAmountCentsInitial = Math.round(initialCostResult.totalCostCents * AppConstants.VAT_RATE).toDouble()
+                val totalCents = if (state.includeVat) {
+                    initialCostResult.totalCostCents + vatAmountCentsInitial
+                } else {
+                    initialCostResult.totalCostCents
+                }
+
+                // Round up to nearest full Rand (100 cents)
+                val roundedTotalCents = Math.ceil(totalCents / 100.0) * 100.0
+
+                // Recalculate yield for the rounded Rand amount
+                val exclCents = if (state.includeVat) {
+                    val vatCents = Math.round(roundedTotalCents * (AppConstants.VAT_RATE / AppConstants.VAT_MULTIPLIER)).toDouble()
+                    roundedTotalCents - vatCents
+                } else {
+                    roundedTotalCents
+                }
+
+                result = calculator.calculateYield(
+                    provider = provider,
+                    purchaseAmountCents = exclCents,
+                    previousPurchasesKwh = state.monthlyCumulativeKwh,
+                    date = referenceDate
+                )
+                vatAmountCents = if (state.includeVat && !result.isCapped) {
+                    Math.round(roundedTotalCents * (AppConstants.VAT_RATE / AppConstants.VAT_MULTIPLIER)).toDouble()
+                } else {
+                    Math.round(result.totalCostCents * AppConstants.VAT_RATE).toDouble()
+                }
             }
             val displayResult = CalculationDisplayResult(
                 result = result,

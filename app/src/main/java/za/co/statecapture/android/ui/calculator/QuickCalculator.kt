@@ -122,7 +122,14 @@ fun QuickCalculatorContent(
             Spacer(modifier = Modifier.height(16.dp))
         }
 
-        // Amount input (placed immediately below IbtProgressBar)
+        // Mode selector
+        SingleChoiceSegmentedButtonRow(modifier = Modifier.fillMaxWidth()) {
+            SegmentedButton(selected = uiState.mode == CalculationMode.RandsToKwh, onClick = { viewModel.onModeChange(CalculationMode.RandsToKwh) }, shape = SegmentedButtonDefaults.itemShape(0, 2)) { Text("Rands → Units") }
+            SegmentedButton(selected = uiState.mode == CalculationMode.KwhToRands, onClick = { viewModel.onModeChange(CalculationMode.KwhToRands) }, shape = SegmentedButtonDefaults.itemShape(1, 2)) { Text("Units → Rands") }
+        }
+        Spacer(modifier = Modifier.height(16.dp))
+
+        // Amount input
         OutlinedTextField(
             value = uiState.inputAmount,
             onValueChange = { viewModel.onInputAmountChange(it) },
@@ -140,13 +147,6 @@ fun QuickCalculatorContent(
             singleLine = true
         )
         Spacer(modifier = Modifier.height(12.dp))
-
-        // Mode selector
-        SingleChoiceSegmentedButtonRow(modifier = Modifier.fillMaxWidth()) {
-            SegmentedButton(selected = uiState.mode == CalculationMode.RandsToKwh, onClick = { viewModel.onModeChange(CalculationMode.RandsToKwh) }, shape = SegmentedButtonDefaults.itemShape(0, 2)) { Text("Rands → Units") }
-            SegmentedButton(selected = uiState.mode == CalculationMode.KwhToRands, onClick = { viewModel.onModeChange(CalculationMode.KwhToRands) }, shape = SegmentedButtonDefaults.itemShape(1, 2)) { Text("Units → Rands") }
-        }
-        Spacer(modifier = Modifier.height(16.dp))
 
         // Result
         AnimatedContent(
