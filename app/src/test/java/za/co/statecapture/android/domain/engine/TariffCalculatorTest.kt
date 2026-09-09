@@ -171,6 +171,30 @@ class TariffCalculatorTest {
         val result = calculator.calculateCost(testProvider, 100.0, 0.0, date)
 
         assertEquals(0.0, result.totalCostCents, 0.001)
+        assertEquals(0.0, result.totalKwh, 0.001)
+        assertNotNull(result.errorMessage)
+    }
+
+    @Test
+    fun `calculate cost - expired tariff period returns zero cost and zero kwh`() {
+        val expiredProvider = TariffProvider(
+            id = "expired_provider",
+            name = "Expired Provider",
+            type = "municipality",
+            periods = listOf(
+                TariffPeriod(
+                    validFrom = "2024-07-01",
+                    validTo = "2025-06-30",
+                    blocks = listOf(TariffBlock(0, 999999, 300.0)),
+                    fixedMonthlyChargeCents = 1000
+                )
+            )
+        )
+        val date = LocalDate.of(2026, 9, 7)
+        val result = calculator.calculateCost(expiredProvider, 100.0, 0.0, date)
+
+        assertEquals(0.0, result.totalCostCents, 0.001)
+        assertEquals(0.0, result.totalKwh, 0.001)
         assertNotNull(result.errorMessage)
     }
 

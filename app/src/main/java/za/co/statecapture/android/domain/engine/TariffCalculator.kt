@@ -163,7 +163,16 @@ class TariffCalculator {
     ): CalculationResult {
         val activePeriod = findActivePeriod(provider, date)
         if (activePeriod == null) {
-            return CalculationResult(targetKwh, emptyList(), 0, totalCostCents = 0.0, errorMessage = "No active tariff period found.")
+            val latestPeriodDate = provider.periods.mapNotNull { period ->
+                period.validTo?.let { parseDate(it) } ?: parseDate(period.validFrom)
+            }.maxOrNull()
+
+            val message = if (latestPeriodDate != null && date.isAfter(latestPeriodDate)) {
+                "The tariffs for this period (${date.year}) have not been published yet."
+            } else {
+                "No active tariff period found for date $date."
+            }
+            return CalculationResult(0.0, emptyList(), 0, totalCostCents = 0.0, errorMessage = message)
         }
 
         var remainingKwh = targetKwh

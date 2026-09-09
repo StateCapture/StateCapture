@@ -54,14 +54,43 @@ class CalculationViewModelTest {
         )
     )
 
+    private val expiredMeter = Meter(
+        id = 2,
+        name = "Expired Meter",
+        meterNumber = "98765432101",
+        providerId = "expired_provider",
+        icon = "⚡",
+        isDefault = false,
+        displayOrder = 1
+    )
+
+    private val expiredProvider = TariffProvider(
+        id = "expired_provider",
+        name = "Expired Cape Town",
+        type = "municipality",
+        periods = listOf(
+            TariffPeriod(
+                validFrom = "2024-07-01",
+                validTo = "2025-06-30",
+                blocks = listOf(
+                    TariffBlock(0, 600, 294.0),
+                    TariffBlock(601, 999999, 384.0)
+                ),
+                fixedMonthlyChargeCents = 33989
+            )
+        )
+    )
+
     private lateinit var viewModel: CalculationViewModel
 
     @Before
     fun setUp() {
         Dispatchers.setMain(testDispatcher)
-        coEvery { repository.getProvider("test_provider", any()) } returns testProvider
         coEvery { repository.getProvider("test_provider") } returns testProvider
-        every { purchaseDao.getPurchasesForMeter(1) } returns flowOf(emptyList())
+        coEvery { repository.getProvider("test_provider", any()) } returns testProvider
+        coEvery { repository.getProvider("expired_provider") } returns expiredProvider
+        coEvery { repository.getProvider("expired_provider", any()) } returns expiredProvider
+        coEvery { purchaseDao.getPurchasesForMeter(any()) } returns flowOf(emptyList())
         coEvery { purchaseDao.getMonthlyTotalKwh(1, any()) } returns 0.0
         coEvery { purchaseDao.getMonthlyTotalKwhBetween(1, any(), any()) } returns 0.0
         viewModel = CalculationViewModel(repository, purchaseDao)
@@ -255,5 +284,57 @@ class CalculationViewModelTest {
         testDispatcher.scheduler.advanceUntilIdle()
 
         assertEquals(pastMonth.plusMonths(1), viewModel.uiState.value.selectedYearMonth)
+    }
+
+    // ── Expired / Missing Tariff Period Handling ──────────────────────────────
+
+    @Test
+    fun `expired tariff period in RandsToKwh mode produces zero yield and zero VAT`() = runTest(testDispatcher) {
+        viewModel.setMeter(expiredMeter)
+        testDispatcher.scheduler.advanceUntilIdle()
+
+        viewModel.onModeChange(CalculationMode.RandsToKwh)
+        viewModel.onInputAmountChange("100")
+        testDispatcher.scheduler.advanceUntilIdle()
+
+        val result = viewModel.uiState.value.result
+        assertNotNull(result)
+        assertEquals(0.0, result!!.result.totalKwh, 0.001)
+        assertEquals(0.0, result.result.totalCostCents, 0.001)
+        // VAT must NOT be extracted from the input amount when yield/cost is zero
+        assertEquals(0.0, result.vatAmountCents, 0.001)
+        assertNotNull(result.result.errorMessage)
+    }
+
+    @Test
+    fun `expired tariff period in KwhToRands mode produces zero yield and zero VAT`() = runTest(testDispatcher) {
+        viewModel.setMeter(expiredMeter)
+        testDispatcher.scheduler.advanceUntilIdle()
+
+        viewModel.onModeChange(CalculationMode.KwhToRands)
+        viewModel.onInputAmountChange("100")
+        testDispatcher.scheduler.advanceUntilIdle()
+
+        val result = viewModel.uiState.value.result
+        assertNotNull(result)
+        assertEquals(0.0, result!!.result.totalKwh, 0.001)
+        assertEquals(0.0, result.result.totalCostCents, 0.001)
+        assertEquals(0.0, result.vatAmountCents, 0.001)
+        assertNotNull(result.result.errorMessage)
+    }
+
+    @Test
+    fun `savePurchase does not record purchase when tariff period is missing or expired`() = runTest(testDispatcher) {
+        viewModel.setMeter(expiredMeter)
+        testDispatcher.scheduler.advanceUntilIdle()
+
+        viewModel.onModeChange(CalculationMode.KwhToRands)
+        viewModel.onInputAmountChange("100")
+        testDispatcher.scheduler.advanceUntilIdle()
+
+        viewModel.savePurchase()
+        testDispatcher.scheduler.advanceUntilIdle()
+
+        coVerify(exactly = 0) { purchaseDao.insert(any()) }
     }
 }
