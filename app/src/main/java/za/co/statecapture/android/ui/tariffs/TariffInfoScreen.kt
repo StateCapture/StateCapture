@@ -29,13 +29,22 @@ import androidx.compose.ui.platform.LocalContext
 import android.content.Context
 import android.content.Intent
 import android.net.Uri
+import androidx.compose.ui.text.buildAnnotatedString
+import androidx.compose.ui.text.withLink
+import androidx.compose.ui.text.LinkAnnotation
+import androidx.compose.ui.text.TextLinkStyles
+import androidx.compose.ui.text.SpanStyle
+import androidx.compose.ui.text.style.TextDecoration
+import androidx.compose.material.icons.filled.Info
+import androidx.compose.foundation.shape.RoundedCornerShape
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun TariffInfoScreen(
     viewModel: TariffViewModel,
     calcViewModel: CalculationViewModel,
-    onMenuClick: () -> Unit
+    onMenuClick: () -> Unit,
+    onNavigateToMeters: () -> Unit = {}
 ) {
     val uiState by viewModel.uiState.collectAsState()
     var showProviderDialog by remember { mutableStateOf(false) }
@@ -190,8 +199,27 @@ fun TariffInfoScreen(
                     fontWeight = FontWeight.Bold,
                     color = MaterialTheme.colorScheme.primary
                 )
+                val tryItOutDescription = buildAnnotatedString {
+                    append("Use the quick calculator below to see how these rates apply to your purchase. This quick calculation assumes that this is the first purchase of the month. To track cumulative blocks and mid-month purchases, record purchases under your ")
+                    withLink(
+                        LinkAnnotation.Clickable(
+                            tag = "meter",
+                            styles = TextLinkStyles(
+                                style = SpanStyle(
+                                    color = MaterialTheme.colorScheme.primary,
+                                    fontWeight = FontWeight.Bold,
+                                    textDecoration = TextDecoration.Underline
+                                )
+                            ),
+                            linkInteractionListener = { onNavigateToMeters() }
+                        )
+                    ) {
+                        append("Meter")
+                    }
+                    append(".")
+                }
                 Text(
-                    "Use the quick calculator below to see how these rates apply to your purchase.",
+                    text = tryItOutDescription,
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.secondary
                 )
