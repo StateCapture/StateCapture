@@ -493,7 +493,9 @@ fun CalculationScreen(
                             // Smart Warnings
                             SmartWarningsSection(uiState.smartWarnings)
                             
-                            val canRecord = (uiState.result?.result?.totalCostCents ?: -1.0) >= 0 && (uiState.result?.result?.totalKwh ?: 0.0) > 0
+                            val canRecord = (uiState.result?.result?.totalCostCents ?: -1.0) >= 0 && 
+                                (uiState.result?.result?.totalKwh ?: 0.0) > 0 && 
+                                uiState.result?.result?.errorMessage == null
                             val recordButtonText = if (isCurrentMonth) "Record Purchase..." else "Record Historical Purchase..."
                             Spacer(modifier = Modifier.height(12.dp))
                             Button(
@@ -1299,6 +1301,27 @@ fun CalculationSummaryCard(
                 ) {
                     Text(fixedChargeLabel, style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.secondary)
                     Text("R${String.format(Locale.US, "%.2f", fixedChargeDisplay / 100.0)}", style = MaterialTheme.typography.labelSmall, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.secondary)
+                }
+            }
+
+            if (result.errorMessage != null) {
+                HorizontalDivider(color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.1f))
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(6.dp)
+                ) {
+                    Icon(
+                        androidx.compose.material.icons.Icons.Default.Warning,
+                        contentDescription = null,
+                        tint = MaterialTheme.colorScheme.error,
+                        modifier = Modifier.size(14.dp)
+                    )
+                    Text(
+                        text = result.errorMessage,
+                        style = MaterialTheme.typography.labelSmall,
+                        color = MaterialTheme.colorScheme.error
+                    )
                 }
             }
         }

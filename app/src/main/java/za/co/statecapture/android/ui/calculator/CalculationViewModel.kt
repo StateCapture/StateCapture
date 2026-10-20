@@ -238,7 +238,7 @@ class CalculationViewModel(
         val result = _uiState.value.result ?: return
         val meter = _uiState.value.selectedMeter ?: return
         
-        if (result.result.totalCostCents < 0 || result.result.totalKwh <= 0) return
+        if (result.result.totalCostCents < 0 || result.result.totalKwh <= 0 || result.result.errorMessage != null) return
 
         val timestamp = if (date == LocalDate.now()) {
             System.currentTimeMillis()
@@ -409,7 +409,9 @@ class CalculationViewModel(
                     previousPurchasesKwh = state.monthlyCumulativeKwh,
                     date = referenceDate
                 )
-                vatAmountCents = if (state.includeVat && !result.isCapped) {
+                vatAmountCents = if (result.totalKwh <= 0.0 || result.totalCostCents <= 0.0 || result.errorMessage != null) {
+                    0.0
+                } else if (state.includeVat && !result.isCapped) {
                     val totalCents = Math.round(input * 100.0).toDouble()
                     Math.round(totalCents * (AppConstants.VAT_RATE / AppConstants.VAT_MULTIPLIER)).toDouble()
                 } else {
@@ -448,7 +450,9 @@ class CalculationViewModel(
                     previousPurchasesKwh = state.monthlyCumulativeKwh,
                     date = referenceDate
                 )
-                vatAmountCents = if (state.includeVat && !result.isCapped) {
+                vatAmountCents = if (result.totalKwh <= 0.0 || result.totalCostCents <= 0.0 || result.errorMessage != null) {
+                    0.0
+                } else if (state.includeVat && !result.isCapped) {
                     Math.round(roundedTotalCents * (AppConstants.VAT_RATE / AppConstants.VAT_MULTIPLIER)).toDouble()
                 } else {
                     Math.round(result.totalCostCents * AppConstants.VAT_RATE).toDouble()

@@ -118,18 +118,36 @@ class TariffRepository(private val context: Context) {
                     indexItem = candidates.first()
                     effectiveId = indexItem.id
                 } else {
-                    return@withContext null
+                    // Try refreshing index from network
+                    ensureIndexLoaded()
+                    indexItem = tariffDao.getIndexItem(id)
+                    if (indexItem == null) {
+                        return@withContext null
+                    }
                 }
             }
 
             // Find the file that covers the requested date
-            val fileEntry = indexItem.files.find { file ->
+            var fileEntry = indexItem.files.find { file ->
                 val validFrom = LocalDate.parse(file.validFrom)
                 val validTo = file.validTo?.let { LocalDate.parse(it) }
 
                 (date.isEqual(validFrom) || date.isAfter(validFrom)) &&
                         (validTo == null || date.isEqual(validTo) || date.isBefore(validTo))
-            } ?: indexItem.files.lastOrNull() // fallback to the latest known file if date is in the far future
+            }
+
+            if (fileEntry == null) {
+                // Local index might be out of date. Refresh index from network!
+                ensureIndexLoaded()
+                indexItem = tariffDao.getIndexItem(effectiveId) ?: indexItem
+                fileEntry = indexItem.files.find { file ->
+                    val validFrom = LocalDate.parse(file.validFrom)
+                    val validTo = file.validTo?.let { LocalDate.parse(it) }
+
+                    (date.isEqual(validFrom) || date.isAfter(validFrom)) &&
+                            (validTo == null || date.isEqual(validTo) || date.isBefore(validTo))
+                } ?: indexItem.files.lastOrNull() // fallback to the latest known file if date is in the far future
+            }
 
             // Check cache / DB
             var entity = tariffDao.getProviderById(effectiveId)
@@ -173,20 +191,22 @@ class TariffRepository(private val context: Context) {
                             )
                         }
                         tariffDao.insertAll(listOf(entity))
-                        providerCache[id] = entity.toDomain()
+                        val domain = entity.toDomain()
+                        providerCache[id] = domain
+                        providerCache[effectiveId] = domain
                     }
                 } catch (e: Exception) {
                     Log.e("TariffRepository", "Failed to load provider file: ${fileEntry.path}", e)
                 }
             }
 
-            // Return from cache or DB
-            providerCache[effectiveId]?.let { return@withContext it }
-            entity?.toDomain()?.also {
-                // Cache under both the effective id and the original request id for future lookups
+            // Return from DB entity (updated) or memory cache
+            val domain = entity?.toDomain() ?: providerCache[effectiveId] ?: providerCache[id]
+            domain?.also {
                 providerCache[effectiveId] = it
                 if (effectiveId != id) providerCache[id] = it
             }
+            return@withContext domain
         }
 
     private fun TariffIndexEntity.toDomain() = TariffIndexItem(

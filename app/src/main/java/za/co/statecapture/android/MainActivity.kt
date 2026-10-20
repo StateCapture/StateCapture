@@ -210,7 +210,8 @@ class MainActivity : ComponentActivity() {
                                                 TariffInfoScreen(
                                                     viewModel = tariffViewModel,
                                                     calcViewModel = tariffCalcViewModel,
-                                                    onMenuClick = { scope.launch { drawerState.open() } }
+                                                    onMenuClick = { scope.launch { drawerState.open() } },
+                                                    onNavigateToMeters = { currentScreen = "meters" }
                                                 )
                                             }
                                         }

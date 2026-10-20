@@ -171,6 +171,30 @@ class TariffCalculatorTest {
         val result = calculator.calculateCost(testProvider, 100.0, 0.0, date)
 
         assertEquals(0.0, result.totalCostCents, 0.001)
+        assertEquals(0.0, result.totalKwh, 0.001)
+        assertNotNull(result.errorMessage)
+    }
+
+    @Test
+    fun `calculate cost - expired tariff period returns zero cost and zero kwh`() {
+        val expiredProvider = TariffProvider(
+            id = "expired_provider",
+            name = "Expired Provider",
+            type = "municipality",
+            periods = listOf(
+                TariffPeriod(
+                    validFrom = "2024-07-01",
+                    validTo = "2025-06-30",
+                    blocks = listOf(TariffBlock(0, 999999, 300.0)),
+                    fixedMonthlyChargeCents = 1000
+                )
+            )
+        )
+        val date = LocalDate.of(2026, 9, 7)
+        val result = calculator.calculateCost(expiredProvider, 100.0, 0.0, date)
+
+        assertEquals(0.0, result.totalCostCents, 0.001)
+        assertEquals(0.0, result.totalKwh, 0.001)
         assertNotNull(result.errorMessage)
     }
 
@@ -226,4 +250,73 @@ class TariffCalculatorTest {
 
         assertTrue(breakdown.isEmpty())
     }
+
+    // ── City of Tshwane 2026/2027 Residential Prepaid Verification ───────────
+
+    private val tshwane2026Provider = TariffProvider(
+        id = "tshwane_prepaid",
+        name = "City of Tshwane - Residential Prepaid",
+        type = "municipality",
+        periods = listOf(
+            TariffPeriod(
+                validFrom = "2026-07-01",
+                validTo = "2027-06-30",
+                blocks = listOf(
+                    TariffBlock(0, 100, 324.12),
+                    TariffBlock(101, 400, 379.32),
+                    TariffBlock(401, 650, 413.26),
+                    TariffBlock(651, 999999, 445.51)
+                ),
+                fixedMonthlyChargeCents = 0
+            )
+        )
+    )
+
+    @Test
+    fun `tshwane 2026 prepaid - first purchase of R500 incl VAT yields 129_2 kWh`() {
+        val date = LocalDate.of(2026, 10, 11)
+        // R500 incl VAT: totalCents = 50000, vat = round(50000 * 15 / 115) = 6522, exclCents = 43478
+        val exclCents = 50000.0 - Math.round(50000.0 * 15.0 / 115.0)
+        assertEquals(43478.0, exclCents, 0.001)
+
+        val result = calculator.calculateYield(tshwane2026Provider, exclCents, 0.0, date)
+
+        // Block 1: 100 kWh @ 324.12c = 32412.0c
+        // Remaining: 43478.0 - 32412.0 = 11066.0c
+        // Block 2: 11066.0c / 379.32c = 29.173 kWh
+        // Total: 129.173 kWh -> 129.2 kWh
+        assertEquals(129.17, result.totalKwh, 0.05)
+        assertEquals(String.format(java.util.Locale.US, "%.1f", 129.17), String.format(java.util.Locale.US, "%.1f", result.totalKwh))
+    }
+
+    @Test
+    fun `tshwane 2026 prepaid - prior purchase of R235 incl VAT yields 63_0 kWh`() {
+        val date = LocalDate.of(2026, 10, 10)
+        // R235 incl VAT: totalCents = 23500, vat = round(23500 * 15 / 115) = 3065, exclCents = 20435
+        val exclCents = 23500.0 - Math.round(23500.0 * 15.0 / 115.0)
+        assertEquals(20435.0, exclCents, 0.001)
+
+        val result = calculator.calculateYield(tshwane2026Provider, exclCents, 0.0, date)
+
+        // Block 1: 20435.0c / 324.12c = 63.0476 kWh -> 63.0 kWh
+        assertEquals(63.05, result.totalKwh, 0.05)
+        assertEquals("63.0", String.format(java.util.Locale.US, "%.1f", result.totalKwh))
+    }
+
+    @Test
+    fun `tshwane 2026 prepaid - second purchase of R500 incl VAT after 63 kWh yields exactly 120_0 kWh`() {
+        val date = LocalDate.of(2026, 10, 11)
+        val exclCents = 50000.0 - Math.round(50000.0 * 15.0 / 115.0) // 43478 cents
+
+        // 63.0 kWh already purchased earlier in the month
+        val result = calculator.calculateYield(tshwane2026Provider, exclCents, 63.0, date)
+
+        // Remaining in Block 1: 100 - 63 = 37.0 kWh @ 324.12c = 11992.44c
+        // Remaining funds: 43478 - 11992.44 = 31485.56c
+        // Block 2: 31485.56c / 379.32c = 83.005 kWh
+        // Total: 37.0 + 83.005 = 120.005 kWh -> 120.0 kWh (matches FNB token exactly!)
+        assertEquals(120.0, result.totalKwh, 0.05)
+        assertEquals("120.0", String.format(java.util.Locale.US, "%.1f", result.totalKwh))
+    }
 }
+
